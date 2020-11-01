@@ -1,5 +1,6 @@
 package kr.co.ddophi.autochangingwallpaper
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,12 +25,13 @@ class CustomAdapter : RecyclerView.Adapter<Holder>() {
         holder.setAlbum(album)
 
     }
+
 }
 
-// 임의로 앨범 제목과 사진 수만 지정 (나중에 바꿀거)
 class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     fun setAlbum(album : Album) {
         itemView.albumTitle.text = album.albumTitle
         itemView.pictureCount.text = "${album.pictureCount}"
+        itemView.albumImage.setImageURI(album.albumImages[0])
     }
 }

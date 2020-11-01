@@ -1,13 +1,12 @@
 package kr.co.ddophi.autochangingwallpaper
 
-import android.text.Editable
-import android.widget.Button
+import android.net.Uri
 
 data class Album (
-//    var albumImage : Int,
+    var albumImages : MutableList<Uri>,
     var albumTitle : String,
     var pictureCount : Int
-//    var btnDelete : Button,
-//    var btnEdit : Button,
-//    var btnSelect : Button
 )
+
+
+
