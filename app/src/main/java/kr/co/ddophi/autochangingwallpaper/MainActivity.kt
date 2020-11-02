@@ -14,8 +14,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.item_recycler.*
+import java.text.ParsePosition
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
     private val FLAG_OPEN_GALLERY = 102
     private val FLAG_STORAGE = 99
@@ -38,12 +40,23 @@ class MainActivity : AppCompatActivity() {
 
     // 어답터 연결
     fun connectAdapter () {
-        adapter = CustomAdapter()
+        adapter = CustomAdapter(this)
         adapter.albumData = albumData
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
+    // n번째 아이템  클릭
+    override fun ItemClicked(position: Int) {
+        Toast.makeText(this, "${position+1}번째 아이템입니다", Toast.LENGTH_SHORT).show()
+    }
+
+    // n번째 삭제 버튼 클릭
+    override fun DeleteButtonClicked(position: Int) {
+        Toast.makeText(this, "${position+1}번째 앨범 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+        albumData.removeAt(position)
+        adapter.notifyItemRemoved(position)
+    }
 
     // 저장소 권한 있는지 확인하고 없으면 요청
     fun isStoragePermitted(): Boolean {
