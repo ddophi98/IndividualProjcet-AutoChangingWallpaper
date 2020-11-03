@@ -39,6 +39,8 @@ class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface) : RecyclerVi
      init{
          itemView.setOnClickListener { recyclerViewInterface.ItemClicked(adapterPosition) }
          itemView.btnDelete.setOnClickListener { recyclerViewInterface.DeleteButtonClicked(adapterPosition) }
+         itemView.btnEdit.setOnClickListener {recyclerViewInterface.EditButtonClicked(adapterPosition)}
+         itemView.btnSelect.setOnClickListener {recyclerViewInterface.SelectButtonClicked(adapterPosition)}
      }
 
     fun setAlbum(album : Album) {

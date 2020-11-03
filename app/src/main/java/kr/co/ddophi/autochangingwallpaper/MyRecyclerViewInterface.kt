@@ -4,4 +4,6 @@ package kr.co.ddophi.autochangingwallpaper
 interface MyRecyclerViewInterface {
     fun ItemClicked(position : Int)
     fun DeleteButtonClicked(position: Int)
+    fun EditButtonClicked(position: Int)
+    fun SelectButtonClicked(position: Int)
 }

@@ -3,11 +3,17 @@ package kr.co.ddophi.autochangingwallpaper
 import android.Manifest
 import android.app.Activity
 import android.content.ClipData
+import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -15,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_recycler.*
+import java.io.File
 import java.text.ParsePosition
 
 class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
@@ -51,11 +58,32 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         Toast.makeText(this, "${position+1}번째 아이템입니다", Toast.LENGTH_SHORT).show()
     }
 
-    // n번째 삭제 버튼 클릭
+    // n번째 아이템의 삭제 버튼 클릭
     override fun DeleteButtonClicked(position: Int) {
         Toast.makeText(this, "${position+1}번째 앨범 삭제되었습니다.", Toast.LENGTH_SHORT).show()
         albumData.removeAt(position)
         adapter.notifyItemRemoved(position)
+
+        val serviceIntent = Intent(this, AutoChangingService::class.java)
+        stopService(serviceIntent)
+    }
+
+    // n번째 아이템의 편집 버튼 클릭 (미구현)
+    override fun EditButtonClicked(position: Int) {
+        Toast.makeText(this, "${position+1}번째 앨범 편집 버튼 클릭", Toast.LENGTH_SHORT).show()
+    }
+
+    // n번째 아이템의 선택 버튼 클릭 (미구현)
+    override fun SelectButtonClicked(position: Int) {
+        Toast.makeText(this, "${position+1}번째 앨범 선택 버튼 클릭", Toast.LENGTH_SHORT).show()
+
+        val serviceIntent = Intent(this, AutoChangingService::class.java)
+        for(i in 0 until albumData[position].pictureCount) {
+            serviceIntent.putExtra("Picture${i}", albumData[position].albumImages[i])
+        }
+        serviceIntent.putExtra("Size", albumData[position].pictureCount)
+
+        ContextCompat.startForegroundService(this, serviceIntent)
     }
 
     // 저장소 권한 있는지 확인하고 없으면 요청
@@ -117,6 +145,18 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         }
     }
 
+    fun uriToBitmap(uri: Uri) : Bitmap {
 
+        //Uri 를 Bitmap으로 변경
+        val bitmap : Bitmap
+        bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val decode = ImageDecoder.createSource(this.contentResolver, uri)
+            ImageDecoder.decodeBitmap(decode)
+        } else {
+            MediaStore.Images.Media.getBitmap(contentResolver, uri)
+        }
+
+        return bitmap
+    }
 
 }
