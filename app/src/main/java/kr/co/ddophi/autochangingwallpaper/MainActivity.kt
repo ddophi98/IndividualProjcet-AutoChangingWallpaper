@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.ClipData
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -19,6 +20,9 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_recycler.*
 import java.io.File
@@ -29,12 +33,14 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     private val FLAG_OPEN_GALLERY = 102
     private val FLAG_STORAGE = 99
     private val STORAGE_PERMISSION = Manifest.permission.READ_EXTERNAL_STORAGE
-    private val albumData:MutableList<Album> = mutableListOf()
+    private lateinit var albumData:MutableList<Album>
     private lateinit var adapter: CustomAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        loadData()
 
         connectAdapter()
 
@@ -146,4 +152,33 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         }
     }
 
+    fun saveData() {
+        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = GsonBuilder().create()
+        val json = gson.toJson(albumData)
+        editor.putString("Album data", json)
+        editor.apply()
+    }
+
+    fun loadData() {
+        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
+        val gson = GsonBuilder().create()
+        val json = sharedPreferences.getString("Album data", null)
+        var test = mutableListOf<Album>()
+        if(json != null) {
+            Log.d("log", "data load 1")
+            val type = object : TypeToken<MutableList<Album>>() {}.type
+            Log.d("log", "data load 2")
+            albumData = gson.fromJson<MutableList<Album>>(json, type)
+            Log.d("log", "data load 3")
+        }else{
+            albumData =  mutableListOf()
+        }
+    }
+
+    override fun onDestroy() {
+        saveData()
+        super.onDestroy()
+    }
 }
