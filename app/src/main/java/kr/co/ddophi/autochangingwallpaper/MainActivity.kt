@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
             if(isStoragePermitted()) {
                 openGallery()
             }
+            Toast.makeText(this, "현재 앨범 개수는 ${albumData.size} 입니다", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -73,7 +74,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         Toast.makeText(this, "${position+1}번째 앨범 편집 버튼 클릭", Toast.LENGTH_SHORT).show()
     }
 
-    // n번째 아이템의 선택 버튼 클릭 (미구현)
+    // n번째 아이템의 선택 버튼 클릭
     override fun SelectButtonClicked(position: Int) {
         Toast.makeText(this, "${position+1}번째 앨범 선택 버튼 클릭", Toast.LENGTH_SHORT).show()
 
@@ -143,20 +144,6 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                 }
             }
         }
-    }
-
-    fun uriToBitmap(uri: Uri) : Bitmap {
-
-        //Uri 를 Bitmap으로 변경
-        val bitmap : Bitmap
-        bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val decode = ImageDecoder.createSource(this.contentResolver, uri)
-            ImageDecoder.decodeBitmap(decode)
-        } else {
-            MediaStore.Images.Media.getBitmap(contentResolver, uri)
-        }
-
-        return bitmap
     }
 
 }

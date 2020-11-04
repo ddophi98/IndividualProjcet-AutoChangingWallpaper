@@ -1,7 +1,6 @@
 package kr.co.ddophi.autochangingwallpaper
 
 import android.app.*
-import android.content.ContentProvider
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -17,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 
 class AutoChangingService : Service() {
 
@@ -44,9 +44,11 @@ class AutoChangingService : Service() {
         startForeground(NOTI_ID, notification)
 
         isRunning = true
-        runBackground(intent!!)
+        if(intent != null) {
+            runBackground(intent)
+        }
 
-        return Service.START_REDELIVER_INTENT
+        return Service.START_STICKY
     }
 
     //서비스 종료
@@ -77,10 +79,10 @@ class AutoChangingService : Service() {
             while(isRunning){
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     Log.d("로그", "uri : ${albumImages[idx]}")
-                    wallpaperManager.setBitmap(uriToBitmap(albumImages[idx]))
+                    wallpaperManager.setBitmap(albumImages[idx])
                 }
                 idx++
-                delay(3000)
+                delay(2000)
                 if(idx == albumImages.size) {
                     idx = 0
                 }
@@ -88,19 +90,31 @@ class AutoChangingService : Service() {
         }
     }
 
-    //따로따로 전달된 사진들을 하나의 리스트에 담기
-    fun picturesToAlbum(intent: Intent) : MutableList<Uri> {
-        val albumImages = mutableListOf<Uri>()
+    fun testBackground() {
+        GlobalScope.launch(Dispatchers.Default) {
+            var idx = 0
+            while(isRunning){
+                Log.d("로그", "Test : ${idx}")
+                idx += 1
+                delay(2000)
+            }
+        }
+    }
+
+    //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기
+    fun picturesToAlbum(intent: Intent) : MutableList<Bitmap> {
+        val albumImages = mutableListOf<Bitmap>()
         val size = intent.getIntExtra("Size", 0)
+        var uri : Uri
         for(i in 0 until size){
-            albumImages.add(intent.getParcelableExtra<Uri>("Picture${i}")!!)
+            uri = intent.getParcelableExtra<Uri>("Picture${i}")!!
+            albumImages.add(uriToBitmap(uri))
         }
         return albumImages
     }
 
+    //Uri 를 Bitmap으로 변경
     fun uriToBitmap(uri: Uri) : Bitmap {
-
-        //Uri 를 Bitmap으로 변경
         val bitmap : Bitmap
         bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val decode = ImageDecoder.createSource(this.contentResolver, uri)
@@ -108,7 +122,6 @@ class AutoChangingService : Service() {
         } else {
             MediaStore.Images.Media.getBitmap(contentResolver, uri)
         }
-
         return bitmap
     }
 }
