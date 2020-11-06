@@ -60,8 +60,8 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     fun connectAdapter () {
         adapter = CustomAdapter(this)
         adapter.albumData = albumData
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        albumRecyclerView.adapter = adapter
+        albumRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
     // n번째 아이템  클릭
@@ -88,6 +88,16 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     // n번째 아이템의 편집 버튼 클릭 (미구현)
     override fun EditButtonClicked(position: Int) {
         Toast.makeText(this, "${position+1}번째 앨범 편집 버튼 클릭", Toast.LENGTH_SHORT).show()
+
+        val editAlbumIntent = Intent(this, EditAlbumActivity::class.java)
+
+        for (i in 0 until albumData[position].pictureCount) {
+            editAlbumIntent.putExtra("Picture${i}", albumData[position].albumImages[i])
+        }
+        editAlbumIntent.putExtra("Size", albumData[position].pictureCount)
+        editAlbumIntent.putExtra("Title", albumData[position].albumTitle)
+
+        startActivity(editAlbumIntent)
 
     }
 

@@ -48,8 +48,4 @@ class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface) : RecyclerVi
         itemView.pictureCount.text = "${album.pictureCount}"
         itemView.albumImage.setImageURI(album.albumImages[0])
     }
-
-
-
-
 }
