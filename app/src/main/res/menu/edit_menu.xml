@@ -3,13 +3,18 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/btnRepresent"
+        android:icon="@android:drawable/btn_star_big_on"
+        android:title="Represent"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/btnSelectAll"
         android:icon="@android:drawable/radiobutton_off_background"
         android:title="Select All"
-        app:showAsAction="always|withText" />
+        app:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/btnDeletePictures"
         android:icon="@android:drawable/ic_menu_delete"
         android:title="Delete"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 </menu>

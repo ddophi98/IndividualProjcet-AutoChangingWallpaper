@@ -1,4 +1,4 @@
-package kr.co.ddophi.autochangingwallpaper
+package kr.co.ddophi.autochangingwallpaper.MainActivity
 
 import android.Manifest
 import android.app.Activity
@@ -18,14 +18,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
+import kr.co.ddophi.autochangingwallpaper.*
+import kr.co.ddophi.autochangingwallpaper.EditActivity.EditAlbumActivity
 
 
 class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
-    private val FLAG_OPEN_GALLERY = 102
+    private val FLAG_OPEN_GALLERY = 101
+    private val FLAG_EDIT_ALBUM_ACTIVITY = 100
     private val FLAG_STORAGE = 99
     private val STORAGE_PERMISSION = Manifest.permission.READ_EXTERNAL_STORAGE
     private val SERVIE_NOT_RUNNING = -1
+    private var currentEditPosition = -1
     private  var currentServicePosition = SERVIE_NOT_RUNNING
     private lateinit var albumData:MutableList<Album>
     private lateinit var adapter: CustomAdapter
@@ -38,12 +42,14 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
         connectAdapter()
 
+        //추가 버튼 동작
         btnAddAlbum.setOnClickListener {
             if(isStoragePermitted()) {
                 openGallery()
             }
         }
 
+        //서비스 종료 버튼 동작
         btnStop.setOnClickListener {
             if(currentServicePosition == SERVIE_NOT_RUNNING){
                 Toast.makeText(this, "현재 설정된 앨범이 없습니다.", Toast.LENGTH_SHORT).show()
@@ -64,11 +70,6 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         albumRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    // n번째 아이템  클릭
-    override fun ItemClicked(position: Int) {
-        Toast.makeText(this, "${position+1}번째 아이템입니다", Toast.LENGTH_SHORT).show()
-    }
-
     // n번째 아이템의 삭제 버튼 클릭
     override fun DeleteButtonClicked(position: Int) {
         when {
@@ -85,10 +86,9 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         }
     }
 
-    // n번째 아이템의 편집 버튼 클릭 (미구현)
+    // n번째 아이템의 편집 버튼 클릭
     override fun EditButtonClicked(position: Int) {
-        Toast.makeText(this, "${position+1}번째 앨범 편집 버튼 클릭", Toast.LENGTH_SHORT).show()
-
+        currentEditPosition = position
         val editAlbumIntent = Intent(this, EditAlbumActivity::class.java)
 
         for (i in 0 until albumData[position].pictureCount) {
@@ -96,16 +96,16 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         }
         editAlbumIntent.putExtra("Size", albumData[position].pictureCount)
         editAlbumIntent.putExtra("Title", albumData[position].albumTitle)
+        editAlbumIntent.putExtra("Represent", albumData[position].representImage)
 
-        startActivity(editAlbumIntent)
-
+        startActivityForResult(editAlbumIntent, FLAG_EDIT_ALBUM_ACTIVITY)
     }
 
     // n번째 아이템의 선택 버튼 클릭
     override fun SelectButtonClicked(position: Int) {
-        Toast.makeText(this, "${albumData[position].albumTitle} 앨범이 선택되었습니다. 배경화면이 자동으로 바뀝니다.", Toast.LENGTH_LONG).show()
+        if(currentServicePosition != position) {
+            Toast.makeText(this, "${albumData[position].albumTitle} 앨범이 선택되었습니다. 배경화면이 자동으로 바뀝니다.", Toast.LENGTH_LONG).show()
 
-        if(position != currentServicePosition) {
             val serviceIntent = Intent(this, AutoChangingService::class.java)
             if(currentServicePosition != SERVIE_NOT_RUNNING) {
                 stopService(serviceIntent)
@@ -117,6 +117,8 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
             ContextCompat.startForegroundService(this, serviceIntent)
             currentServicePosition = position
+        }else{
+            Toast.makeText(this, "이미 선택된 앨범입니다.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -143,71 +145,63 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         }
     }
 
-    //갤러리에서 사진 선택
+    //갤러리에서 사진 선택 (다중 선택 버전 고려)
     fun openGallery() {
         val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.setType("image/*")
+        intent.type = "image/*"
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         startActivityForResult(intent, FLAG_OPEN_GALLERY)
     }
 
-    //갤러리에서 사진 선택 후 새로운 앨범 생성해서 albumData에 넣기
+    //다른 액티비티 결과 받아오기
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if(resultCode == Activity.RESULT_OK) {
-            when(requestCode){
-                FLAG_OPEN_GALLERY -> {
-                    val albumImages = mutableListOf<Uri>()
-                    val clipData: ClipData? = data?.clipData
-                    if (clipData != null) {
-                        for (i in 0 until clipData.itemCount) {
-                            albumImages.add(clipData.getItemAt(i).uri)
-                        }
-                    } else {
-                        val imageUri = data?.data
-                        if (imageUri != null) {
-                            albumImages.add(imageUri)
-                        }
+            when(requestCode) {
+                //갤러리에서 사진 선택 후 새로운 앨범 생성해서 albumData 리스트에 넣기
+                 FLAG_OPEN_GALLERY -> {
+                     val albumImages = mutableListOf<Uri>()
+                     var pictureCount = 0
+
+                     val clipData: ClipData? = data?.clipData
+                     if (clipData != null) {
+                         pictureCount = clipData.itemCount
+                         for (i in 0 until pictureCount) {
+                             albumImages.add(clipData.getItemAt(i).uri)
+                         }
+                     } else {
+                         pictureCount = 1
+                         albumImages.add(data?.data!!)
+                     }
+
+                     val newAlbum = Album(albumImages, "Album ${albumData.count() + 1}", pictureCount, albumImages[0])
+                     albumData.add(newAlbum)
+
+                     adapter.notifyDataSetChanged()
+                     saveData()
+                 }
+                // 편집한 앨범에서 편집된 것들 업데이트
+                FLAG_EDIT_ALBUM_ACTIVITY -> {
+                    val currentAlbum = albumData[currentEditPosition]
+                    currentAlbum.albumImages.clear()
+
+                    currentAlbum.pictureCount = data!!.getIntExtra("Size", -1)
+                    currentAlbum.representImage = data.getParcelableExtra<Uri>("Represent")!!
+                    var pictureUri: Uri
+                    for (i in 0 until currentAlbum.pictureCount) {
+                        pictureUri = data.getParcelableExtra<Uri>("Picture${i}")!!
+                        currentAlbum.albumImages.add(pictureUri)
                     }
-                    val pictureCount = if(clipData != null) clipData.itemCount else 1
-                    val newAlbum = Album(albumImages, "Album ${albumData.count()+1}", pictureCount)
-                    albumData.add(newAlbum)
+
                     adapter.notifyDataSetChanged()
-                    saveData()
+                    currentEditPosition = -1
                 }
             }
         }
     }
 
-    //미완성
-    fun saveData() {
-/*        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val gson = GsonBuilder().create()
-        val json = gson.toJson(albumData)
-        editor.putString("Album data", json)
-        editor.apply() */
-    }
-
-    //미완성
-    fun loadData() {
-        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
-        val gson = GsonBuilder().create()
-        val json = sharedPreferences.getString("Album data", null)
-        var test = mutableListOf<Album>()
-        if(json != null) {
-            Log.d("로그", "data load 1")
-            val type = object : TypeToken<MutableList<Album>>() {}.type
-            Log.d("로그", "data load 2")
-            albumData = gson.fromJson<MutableList<Album>>(json, type)
-            Log.d("로그", "data load 3")
-        }else{
-            albumData =  mutableListOf()
-        }
-    }
-
-    //앨범을 삭제할 때 나오는 팝업 메시지
+    //서비스가 실행중이지 않은 앨범을 삭제할 때나오는 팝업 메시지
     fun showDeletePopup1(position: Int) {
         val alertDialog = AlertDialog.Builder(this)
             .setTitle("앨범 삭제")
@@ -241,6 +235,32 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
             .create()
 
         alertDialog.show()
+    }
+
+    //미완성
+    fun saveData() {
+/*        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = GsonBuilder().create()
+        val json = gson.toJson(albumData)
+        editor.putString("Album data", json)
+        editor.apply() */
+    }
+
+    //미완성
+    fun loadData() {
+        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
+        val gson = GsonBuilder().create()
+        val json = sharedPreferences.getString("Album data", null)
+        if(json != null) {
+            Log.d("로그", "data load 1")
+            val type = object : TypeToken<MutableList<Album>>() {}.type
+            Log.d("로그", "data load 2")
+            albumData = gson.fromJson<MutableList<Album>>(json, type)
+            Log.d("로그", "data load 3")
+        }else{
+            albumData =  mutableListOf()
+        }
     }
 
     //미완성

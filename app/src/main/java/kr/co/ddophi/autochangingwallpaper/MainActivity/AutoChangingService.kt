@@ -1,4 +1,4 @@
-package kr.co.ddophi.autochangingwallpaper
+package kr.co.ddophi.autochangingwallpaper.MainActivity
 
 import android.app.*
 import android.content.Intent
@@ -10,12 +10,12 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.MediaStore
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kr.co.ddophi.autochangingwallpaper.R
 
 
 class AutoChangingService : Service() {
@@ -28,7 +28,6 @@ class AutoChangingService : Service() {
     override fun onBind(intent: Intent): IBinder {
         return Binder()
     }
-
 
     //Foreground 서비스 돌아가게 하기
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -71,7 +70,7 @@ class AutoChangingService : Service() {
 
     //계속해서 배경화면 바꿔주기
     fun runBackground(intent: Intent) {
-        val albumImages = picturesToAlbum(intent)
+        val albumImages = loadData(intent)
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
 
         var idx = 0
@@ -90,19 +89,8 @@ class AutoChangingService : Service() {
         }
     }
 
-    fun testBackground() {
-        GlobalScope.launch(Dispatchers.Default) {
-            var idx = 0
-            while(isRunning){
-                Log.d("로그", "Test : ${idx}")
-                idx += 1
-                delay(2000)
-            }
-        }
-    }
-
     //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기
-    fun picturesToAlbum(intent: Intent) : MutableList<Bitmap> {
+    fun loadData(intent: Intent) : MutableList<Bitmap> {
         val albumImages = mutableListOf<Bitmap>()
         val size = intent.getIntExtra("Size", 0)
         var uri : Uri
@@ -113,10 +101,9 @@ class AutoChangingService : Service() {
         return albumImages
     }
 
-    //Uri 를 Bitmap으로 변경
+    //Uri 를 Bitmap 으로 변경
     fun uriToBitmap(uri: Uri) : Bitmap {
-        val bitmap : Bitmap
-        bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val decode = ImageDecoder.createSource(this.contentResolver, uri)
             ImageDecoder.decodeBitmap(decode)
         } else {

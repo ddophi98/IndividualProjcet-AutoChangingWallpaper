@@ -38,7 +38,7 @@
         android:layout_marginBottom="8dp"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Name"
+        android:text="Album"
         android:textSize="20sp"
         app:layout_constraintBottom_toTopOf="@+id/pictureCount"
         app:layout_constraintStart_toEndOf="@+id/albumImage"
@@ -124,4 +124,5 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/textEdit"
         app:layout_constraintTop_toBottomOf="@+id/btnSelect" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

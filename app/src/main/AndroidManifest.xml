@@ -14,10 +14,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".EditAlbumActivity"></activity>
+        <activity android:name=".EditActivity.PictureShowActivity"
+            android:theme="@style/CustomActionBarTheme"/>
+        <activity android:name=".EditActivity.EditAlbumActivity" />
 
         <receiver
-            android:name=".BootReceiver"
+            android:name=".MainActivity.BootReceiver"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
@@ -28,11 +30,11 @@
         </receiver>
 
         <service
-            android:name=".AutoChangingService"
+            android:name=".MainActivity.AutoChangingService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

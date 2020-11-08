@@ -1,4 +1,4 @@
-package kr.co.ddophi.autochangingwallpaper
+package kr.co.ddophi.autochangingwallpaper.MainActivity
 
 import android.content.BroadcastReceiver
 import android.content.Context

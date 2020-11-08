@@ -7,7 +7,8 @@ import kotlinx.android.parcel.Parcelize
 data class Album (
     var albumImages : MutableList<Uri>,
     var albumTitle : String,
-    var pictureCount : Int
+    var pictureCount : Int,
+    var representImage : Uri
 )
 
 

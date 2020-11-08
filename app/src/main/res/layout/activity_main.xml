@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#DFB6E3"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity.MainActivity">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/albumRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="16dp"
-        android:background="#ADE8DD"
+        android:background="#703449"
         app:layout_constraintBottom_toTopOf="@+id/btnAddAlbum"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
