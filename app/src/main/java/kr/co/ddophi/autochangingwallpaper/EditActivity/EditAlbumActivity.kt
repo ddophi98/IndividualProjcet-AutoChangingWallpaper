@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
@@ -104,6 +105,7 @@ class EditAlbumActivity : AppCompatActivity() {
                         }
                     } else {
                         val imageUri = data?.data
+                        Log.d("로그", "${imageUri}")
                         if (imageUri != null) {
                             album.add(imageUri)
                         }
@@ -113,4 +115,46 @@ class EditAlbumActivity : AppCompatActivity() {
             }
         }
     }
+
+   /* override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(resultCode == Activity.RESULT_OK) {
+
+            var isContain = false
+
+            when(requestCode){
+                FLAG_OPEN_GALLERY -> {
+                    val clipData: ClipData? = data?.clipData
+                    if (clipData != null) {
+                        for (i in 0 until clipData.itemCount) {
+                            if(album.contains(clipData.getItemAt(i).uri)){
+                                isContain = true
+                                break
+                            }
+                        }
+                        if(!isContain) {
+                            for (i in 0 until clipData.itemCount) {
+                                album.add(clipData.getItemAt(i).uri)
+                                Log.d("로그", "추가1")
+                            }
+                        }
+                    } else {
+                        val imageUri = data?.data
+                        if(album.contains(imageUri)){
+                            isContain = true
+                        }
+                        if (imageUri != null && !isContain) {
+                            album.add(imageUri)
+                            Log.d("로그", "추가2")
+                        }
+                    }
+                    adapter.notifyDataSetChanged()
+                    if(isContain){
+                        Toast.makeText(this, "이미 포함된 사진이 있습니다. 다시 골라주세요", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+    } */
 }

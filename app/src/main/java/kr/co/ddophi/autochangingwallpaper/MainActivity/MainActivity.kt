@@ -9,15 +9,20 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.item_recycler.*
 import kr.co.ddophi.autochangingwallpaper.*
 import kr.co.ddophi.autochangingwallpaper.EditActivity.EditAlbumActivity
 
@@ -64,10 +69,15 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
     // 어답터 연결
     fun connectAdapter () {
-        adapter = CustomAdapter(this)
+        adapter = CustomAdapter(this, this)
         adapter.albumData = albumData
         albumRecyclerView.adapter = adapter
         albumRecyclerView.layoutManager = LinearLayoutManager(this)
+    }
+
+    // n번째 아이템의 제목 설정 클릭 및 작성
+    override fun albumTitleClicked(position: Int, title: String) {
+        albumData[position].albumTitle = title
     }
 
     // n번째 아이템의 삭제 버튼 클릭
@@ -175,7 +185,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                          albumImages.add(data?.data!!)
                      }
 
-                     val newAlbum = Album(albumImages, "Album ${albumData.count() + 1}", pictureCount, albumImages[0])
+                     val newAlbum = Album(albumImages, "", pictureCount, albumImages[0])
                      albumData.add(newAlbum)
 
                      adapter.notifyDataSetChanged()
