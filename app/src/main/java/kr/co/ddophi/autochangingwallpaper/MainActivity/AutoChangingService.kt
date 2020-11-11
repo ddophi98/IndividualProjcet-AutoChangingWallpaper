@@ -52,9 +52,7 @@ class AutoChangingService : Service() {
 
     //서비스 종료
     override fun onDestroy() {
-
         Log.d("로그", "서비스 종료")
-
         isRunning = false
         super.onDestroy()
     }
@@ -77,7 +75,6 @@ class AutoChangingService : Service() {
         GlobalScope.launch(Dispatchers.Default) {
             while(isRunning){
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    Log.d("로그", "uri : ${albumImages[idx]}")
                     wallpaperManager.setBitmap(albumImages[idx])
                 }
                 idx++
@@ -103,11 +100,14 @@ class AutoChangingService : Service() {
 
     //Uri 를 Bitmap 으로 변경
     fun uriToBitmap(uri: Uri) : Bitmap {
-        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val bitmap : Bitmap
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val decode = ImageDecoder.createSource(this.contentResolver, uri)
-            ImageDecoder.decodeBitmap(decode)
+            bitmap = ImageDecoder.decodeBitmap(decode)
         } else {
-            MediaStore.Images.Media.getBitmap(contentResolver, uri)
+            Log.d("ProjectLog", "Picture Uri : ${uri}")
+            bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+            Log.d("ProjectLog", "Converted")
         }
         return bitmap
     }

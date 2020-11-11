@@ -2,18 +2,23 @@ package kr.co.ddophi.autochangingwallpaper.MainActivity
 
 import android.Manifest
 import android.app.Activity
+import android.app.Service
 import android.content.ClipData
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.IBinder
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -42,6 +47,8 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
 
         loadData()
 
@@ -157,7 +164,10 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
     //갤러리에서 사진 선택 (다중 선택 버전 고려)
     fun openGallery() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         intent.type = "image/*"
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         startActivityForResult(intent, FLAG_OPEN_GALLERY)
@@ -174,14 +184,23 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                      val albumImages = mutableListOf<Uri>()
                      var pictureCount = 0
 
+                     val takeflags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
                      val clipData: ClipData? = data?.clipData
                      if (clipData != null) {
                          pictureCount = clipData.itemCount
                          for (i in 0 until pictureCount) {
+                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                 contentResolver.takePersistableUriPermission(clipData.getItemAt(i).uri, takeflags)
+                             }
                              albumImages.add(clipData.getItemAt(i).uri)
                          }
                      } else {
                          pictureCount = 1
+                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                             contentResolver.takePersistableUriPermission(data?.data!!, takeflags)
+                         }
                          albumImages.add(data?.data!!)
                      }
 
@@ -189,7 +208,6 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                      albumData.add(newAlbum)
 
                      adapter.notifyDataSetChanged()
-                     saveData()
                  }
                 // 편집한 앨범에서 편집된 것들 업데이트
                 FLAG_EDIT_ALBUM_ACTIVITY -> {
@@ -247,36 +265,37 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         alertDialog.show()
     }
 
-    //미완성
+    //데이터 저장(albumData)
     fun saveData() {
-/*        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("Shared Preferences", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-        val gson = GsonBuilder().create()
+        val gson = GsonBuilder().registerTypeHierarchyAdapter(Uri::class.java, UriTypeAdapter()).create()
         val json = gson.toJson(albumData)
         editor.putString("Album data", json)
-        editor.apply() */
+        editor.putInt("Current Service Position", currentServicePosition)
+        editor.apply()
     }
 
-    //미완성
+    //데이터 불러오기
     fun loadData() {
-        val sharedPreferences = getSharedPreferences("shared preferences", Context.MODE_PRIVATE)
-        val gson = GsonBuilder().create()
+        val sharedPreferences = getSharedPreferences("Shared Preferences", Context.MODE_PRIVATE)
+        currentServicePosition = sharedPreferences.getInt("Current Service Position", SERVIE_NOT_RUNNING)
+        val gson = GsonBuilder().registerTypeHierarchyAdapter(Uri::class.java, UriTypeAdapter()).create()
         val json = sharedPreferences.getString("Album data", null)
         if(json != null) {
-            Log.d("로그", "data load 1")
             val type = object : TypeToken<MutableList<Album>>() {}.type
-            Log.d("로그", "data load 2")
             albumData = gson.fromJson<MutableList<Album>>(json, type)
-            Log.d("로그", "data load 3")
         }else{
             albumData =  mutableListOf()
         }
     }
 
-    //미완성
-    override fun onDestroy() {
+    //앱을 종료하거나 나갈때마다 저장
+    override fun onPause() {
+        Log.d("로그", "사라짐")
         saveData()
-        Log.d("로그", "종료")
-        super.onDestroy()
+        super.onPause()
     }
 }
+
+
