@@ -1,0 +1,46 @@
+<resources>
+    <!-- Reply Preference -->
+    <string-array name="reply_entries">
+        <item>Reply</item>
+        <item>Reply to all</item>
+    </string-array>
+
+    <string-array name="reply_values">
+        <item>reply</item>
+        <item>reply_all</item>
+    </string-array>
+
+    <string-array name="change_cycle_time">
+        <item>초(seconds)</item>
+        <item>분(minutes)</item>
+        <item>시간(hours)</item>
+        <item>일(days)</item>
+    </string-array>
+
+    <string-array name="change_cycle_time_value">
+        <item>seconds</item>
+        <item>minutes</item>
+        <item>hours</item>
+        <item>days</item>
+    </string-array>
+
+    <string-array name="change_order">
+        <item>순서대로</item>
+        <item>랜덤으로</item>
+    </string-array>
+
+    <string-array name="change_order_value">
+        <item>inOrder</item>
+        <item>randomOrder</item>
+    </string-array>
+
+    <string-array name="image_resize">
+        <item>fill</item>
+        <item>fit</item>
+    </string-array>
+
+    <string-array name="image_resize_value">
+        <item>fill</item>
+        <item>fit</item>
+    </string-array>
+</resources>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="적용 화면">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="HomeScreen"
+            android:title="홈화면" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="LockScreen"
+            android:title="잠금화면" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:dependency="HomeScreen"
+        android:title="바뀌는 주기 설정 (홈화면)">
+        <EditTextPreference
+            android:defaultValue="1"
+            android:key="TimeCycleNumber"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="1"
+            android:title="시간" />
+        <ListPreference
+            android:defaultValue="minutes"
+            android:entries="@array/change_cycle_time"
+            android:entryValues="@array/change_cycle_time_value"
+            android:key="TimeCycleType"
+            android:summary="분"
+            android:title="시간 단위" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:dependency="HomeScreen"
+        android:title="사이즈 조절 및 순서 (홈화면)">
+        <ListPreference
+            android:defaultValue="fill"
+            android:entries="@array/image_resize"
+            android:entryValues="@array/image_resize_value"
+            android:key="ImageResize"
+            android:summary="fill"
+            android:title="사진 사이즈 조정" />
+        <ListPreference
+            android:defaultValue="inOrder"
+            android:entries="@array/change_order"
+            android:entryValues="@array/change_order_value"
+            android:key="ImageOrder"
+            android:summary="순서대로"
+            android:title="사진 순서" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:dependency="LockScreen"
+        android:title="바뀌는 주기 설정 (잠금화면)">
+        <EditTextPreference
+            android:defaultValue="1"
+            android:key="TimeCycleNumber"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="1"
+            android:title="시간" />
+        <ListPreference
+            android:defaultValue="minutes"
+            android:entries="@array/change_cycle_time"
+            android:entryValues="@array/change_cycle_time_value"
+            android:key="TimeCycleType"
+            android:summary="분"
+            android:title="시간 단위" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:dependency="LockScreen"
+        android:title="사이즈 조절 및 순서 (잠금화면)">
+        <ListPreference
+            android:defaultValue="fill"
+            android:entries="@array/image_resize"
+            android:entryValues="@array/image_resize_value"
+            android:key="ImageResize"
+            android:summary="fill"
+            android:title="사진 사이즈 조정" />
+        <ListPreference
+            android:defaultValue="inOrder"
+            android:entries="@array/change_order"
+            android:entryValues="@array/change_order_value"
+            android:key="ImageOrder"
+            android:summary="순서대로"
+            android:title="사진 순서" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="기타">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="DoubleTap"
+            android:summaryOff="사용안함"
+            android:summaryOn="사용"
+            android:title="Double tap 으로 사진을 넘깁니다" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

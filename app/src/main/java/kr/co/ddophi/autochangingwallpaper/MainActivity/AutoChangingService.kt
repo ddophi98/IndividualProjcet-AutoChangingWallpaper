@@ -74,14 +74,18 @@ class AutoChangingService : Service() {
         var idx = 0
         GlobalScope.launch(Dispatchers.Default) {
             while(isRunning){
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    wallpaperManager.setBitmap(albumImages[idx])
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    wallpaperManager.setBitmap(albumImages[idx], null, true, WallpaperManager.FLAG_LOCK)
+                    wallpaperManager.setBitmap(albumImages[idx], null, true, WallpaperManager.FLAG_SYSTEM)
                 }
+
                 idx++
                 delay(2000)
                 if(idx == albumImages.size) {
                     idx = 0
                 }
+
             }
         }
     }

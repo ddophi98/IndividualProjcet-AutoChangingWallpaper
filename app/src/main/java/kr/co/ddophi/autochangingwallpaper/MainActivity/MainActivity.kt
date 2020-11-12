@@ -16,6 +16,8 @@ import android.os.IBinder
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -48,8 +50,6 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
-
         loadData()
 
         connectAdapter()
@@ -80,6 +80,23 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         adapter.albumData = albumData
         albumRecyclerView.adapter = adapter
         albumRecyclerView.layoutManager = LinearLayoutManager(this)
+    }
+
+    //액션바 메뉴 설정
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    //액션바 메뉴 눌렀을 때 동작
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.btnSetting -> {
+                val settingIntent = Intent(this, SettingActivity::class.java)
+                startActivity(settingIntent)
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     // n번째 아이템의 제목 설정 클릭 및 작성
