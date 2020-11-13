@@ -3,10 +3,7 @@ package kr.co.ddophi.autochangingwallpaper.MainActivity
 import android.Manifest
 import android.app.Activity
 import android.app.Service
-import android.content.ClipData
-import android.content.ContentResolver
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -25,6 +22,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -36,22 +34,33 @@ import kr.co.ddophi.autochangingwallpaper.EditActivity.EditAlbumActivity
 
 class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
+    private val FLAG_SETTING_ACTIVITY = 102
     private val FLAG_OPEN_GALLERY = 101
     private val FLAG_EDIT_ALBUM_ACTIVITY = 100
     private val FLAG_STORAGE = 99
     private val STORAGE_PERMISSION = Manifest.permission.READ_EXTERNAL_STORAGE
+
     private val SERVIE_NOT_RUNNING = -1
-    private var currentEditPosition = -1
+    private val EDIT_NOT_PROCESSING = -1
+    private var currentEditPosition = EDIT_NOT_PROCESSING
     private  var currentServicePosition = SERVIE_NOT_RUNNING
+
+    private var SETTING_HOME_SCREEN = false
+    private var SETTING_LOCK_SCREEN = false
+
     private lateinit var albumData:MutableList<Album>
     private lateinit var adapter: CustomAdapter
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        //기존 데이터와 설정값 가져오기
         loadData()
+        loadSetting()
 
+        //리사이클러뷰 어답터 연결
         connectAdapter()
 
         //추가 버튼 동작
@@ -93,7 +102,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         when(item.itemId){
             R.id.btnSetting -> {
                 val settingIntent = Intent(this, SettingActivity::class.java)
-                startActivity(settingIntent)
+                startActivityForResult(settingIntent, FLAG_SETTING_ACTIVITY)
             }
         }
         return super.onOptionsItemSelected(item)
@@ -137,22 +146,34 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
     // n번째 아이템의 선택 버튼 클릭
     override fun SelectButtonClicked(position: Int) {
-        if(currentServicePosition != position) {
-            Toast.makeText(this, "${albumData[position].albumTitle} 앨범이 선택되었습니다. 배경화면이 자동으로 바뀝니다.", Toast.LENGTH_LONG).show()
+        if(!SETTING_HOME_SCREEN && !SETTING_LOCK_SCREEN) {
+            Toast.makeText(this, "설정창에서 적어도 한개의 화면은 선택해주세요", Toast.LENGTH_LONG).show()
+        }else {
+            if (currentServicePosition != position) {
+                Toast.makeText(
+                    this,
+                    "${albumData[position].albumTitle} 앨범이 선택되었습니다. 배경화면이 자동으로 바뀝니다.",
+                    Toast.LENGTH_LONG
+                ).show()
 
-            val serviceIntent = Intent(this, AutoChangingService::class.java)
-            if(currentServicePosition != SERVIE_NOT_RUNNING) {
-                stopService(serviceIntent)
-            }
-            for (i in 0 until albumData[position].pictureCount) {
-                serviceIntent.putExtra("Picture${i}", albumData[position].albumImages[i])
-            }
-            serviceIntent.putExtra("Size", albumData[position].pictureCount)
+                val serviceIntent = Intent(this, AutoChangingService::class.java)
 
-            ContextCompat.startForegroundService(this, serviceIntent)
-            currentServicePosition = position
-        }else{
-            Toast.makeText(this, "이미 선택된 앨범입니다.", Toast.LENGTH_SHORT).show()
+                if (currentServicePosition != SERVIE_NOT_RUNNING) {
+                    stopService(serviceIntent)
+                }
+
+                for (i in 0 until albumData[position].pictureCount) {
+                    serviceIntent.putExtra("Picture${i}", albumData[position].albumImages[i])
+                }
+                serviceIntent.putExtra("Size", albumData[position].pictureCount)
+                serviceIntent.putExtra("HomeScreen", SETTING_HOME_SCREEN)
+                serviceIntent.putExtra("LockScreen", SETTING_LOCK_SCREEN)
+
+                ContextCompat.startForegroundService(this, serviceIntent)
+                currentServicePosition = position
+            } else {
+                Toast.makeText(this, "이미 선택된 앨범입니다.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -240,7 +261,35 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                     }
 
                     adapter.notifyDataSetChanged()
-                    currentEditPosition = -1
+                    currentEditPosition = EDIT_NOT_PROCESSING
+                }
+                //세팅값 업데이트
+                FLAG_SETTING_ACTIVITY -> {
+                    loadSetting()
+                    if(currentServicePosition != SERVIE_NOT_RUNNING){
+                        val serviceIntent = Intent(this, AutoChangingService::class.java)
+
+                        //서비스 멈춤
+                        stopService(serviceIntent)
+                        val position = currentServicePosition
+                        currentServicePosition = SERVIE_NOT_RUNNING
+
+                        //서비스 다시 시작
+                        if(!(!SETTING_HOME_SCREEN && !SETTING_LOCK_SCREEN)) {
+                            for (i in 0 until albumData[position].pictureCount) {
+                                serviceIntent.putExtra(
+                                    "Picture${i}",
+                                    albumData[position].albumImages[i]
+                                )
+                            }
+                            serviceIntent.putExtra("Size", albumData[position].pictureCount)
+                            serviceIntent.putExtra("HomeScreen", SETTING_HOME_SCREEN)
+                            serviceIntent.putExtra("LockScreen", SETTING_LOCK_SCREEN)
+
+                            ContextCompat.startForegroundService(this, serviceIntent)
+                            currentServicePosition = position
+                        }
+                    }
                 }
             }
         }
@@ -284,7 +333,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
     //데이터 저장(albumData)
     fun saveData() {
-        val sharedPreferences = getSharedPreferences("Shared Preferences", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("SharedPreferences_AlbumData", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         val gson = GsonBuilder().registerTypeHierarchyAdapter(Uri::class.java, UriTypeAdapter()).create()
         val json = gson.toJson(albumData)
@@ -295,7 +344,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
     //데이터 불러오기
     fun loadData() {
-        val sharedPreferences = getSharedPreferences("Shared Preferences", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("SharedPreferences_AlbumData", Context.MODE_PRIVATE)
         currentServicePosition = sharedPreferences.getInt("Current Service Position", SERVIE_NOT_RUNNING)
         val gson = GsonBuilder().registerTypeHierarchyAdapter(Uri::class.java, UriTypeAdapter()).create()
         val json = sharedPreferences.getString("Album data", null)
@@ -307,9 +356,15 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         }
     }
 
+    //설정 값 불러오기
+    fun loadSetting() {
+        val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        SETTING_HOME_SCREEN = defaultSharedPreferences.getBoolean("HomeScreen", false)
+        SETTING_LOCK_SCREEN = defaultSharedPreferences.getBoolean("LockScreen", false)
+    }
+
     //앱을 종료하거나 나갈때마다 저장
     override fun onPause() {
-        Log.d("로그", "사라짐")
         saveData()
         super.onPause()
     }

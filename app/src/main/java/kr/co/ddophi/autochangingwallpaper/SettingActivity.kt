@@ -1,5 +1,8 @@
 package kr.co.ddophi.autochangingwallpaper
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
@@ -8,15 +11,17 @@ import androidx.preference.*
 
 //Preference Activity 로 설정화면 만들기
 class SettingActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         supportActionBar?.setTitle("설정 화면")
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         supportFragmentManager.beginTransaction()
             .replace(android.R.id.content, SettingFragment())
             .commit()
+
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -28,6 +33,12 @@ class SettingActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onBackPressed() {
+        val returnIntent = Intent()
+        setResult(Activity.RESULT_OK, returnIntent)
+        super.onBackPressed()
+    }
+
     class SettingFragment : PreferenceFragmentCompat(){
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             addPreferencesFromResource(R.xml.preferences_setting)
@@ -36,6 +47,8 @@ class SettingActivity : AppCompatActivity() {
             setOnPreferenceChange(findPreference("TimeCycleType")!!)
             setOnPreferenceChange(findPreference("ImageResize")!!)
             setOnPreferenceChange(findPreference("ImageOrder")!!)
+
+            val preferenceName = this.preferenceManager.sharedPreferencesName
         }
 
         val onPreferenceChangeListener : Preference.OnPreferenceChangeListener = object: Preference.OnPreferenceChangeListener{

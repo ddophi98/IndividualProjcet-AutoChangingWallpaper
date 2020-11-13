@@ -1,6 +1,7 @@
 package kr.co.ddophi.autochangingwallpaper.MainActivity
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -11,15 +12,19 @@ import android.os.IBinder
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.ddophi.autochangingwallpaper.R
+import kr.co.ddophi.autochangingwallpaper.SettingActivity
 
 
 class AutoChangingService : Service() {
 
+    var SETTING_HOME_SCREEN = false
+    var SETTING_LOCK_SCREEN = false
     val CHANNEL_ID = "ForegroundChannel"
     val NOTI_ID = 123
     var isRunning = false
@@ -44,7 +49,14 @@ class AutoChangingService : Service() {
 
         isRunning = true
         if(intent != null) {
-            runBackground(intent)
+            loadSetting(intent)
+
+            if(SETTING_HOME_SCREEN) {
+                runBackground1(intent)
+            }
+            if(SETTING_LOCK_SCREEN) {
+                runBackground2(intent)
+            }
         }
 
         return Service.START_STICKY
@@ -66,8 +78,9 @@ class AutoChangingService : Service() {
         }
     }
 
-    //계속해서 배경화면 바꿔주기
-    fun runBackground(intent: Intent) {
+    //계속해서 배경화면 바꿔주기 (홈화면)
+    fun runBackground1(intent: Intent) {
+        Log.d("로그", "1서비스")
         val albumImages = loadData(intent)
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
 
@@ -76,7 +89,6 @@ class AutoChangingService : Service() {
             while(isRunning){
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    wallpaperManager.setBitmap(albumImages[idx], null, true, WallpaperManager.FLAG_LOCK)
                     wallpaperManager.setBitmap(albumImages[idx], null, true, WallpaperManager.FLAG_SYSTEM)
                 }
 
@@ -88,6 +100,36 @@ class AutoChangingService : Service() {
 
             }
         }
+    }
+
+    //계속해서 배경화면 바꿔주기 (잠금화면)
+    fun runBackground2(intent: Intent) {
+        Log.d("로그", "2서비스")
+        val albumImages = loadData(intent)
+        val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
+
+        var idx = 0
+        GlobalScope.launch(Dispatchers.Default) {
+            while(isRunning){
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    wallpaperManager.setBitmap(albumImages[idx], null, true, WallpaperManager.FLAG_LOCK)
+                }
+
+                idx++
+                delay(2000)
+                if(idx == albumImages.size) {
+                    idx = 0
+                }
+
+            }
+        }
+    }
+
+    //세팅 값 받아오기
+    fun loadSetting(intent: Intent) {
+        SETTING_HOME_SCREEN = intent.getBooleanExtra("HomeScreen", false)
+        SETTING_LOCK_SCREEN = intent.getBooleanExtra("LockScreen", false)
     }
 
     //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기
