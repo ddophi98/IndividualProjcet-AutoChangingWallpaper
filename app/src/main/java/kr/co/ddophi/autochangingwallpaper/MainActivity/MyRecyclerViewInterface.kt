@@ -6,4 +6,5 @@ interface MyRecyclerViewInterface {
     fun EditButtonClicked(position: Int)
     fun SelectButtonClicked(position: Int)
     fun albumTitleClicked(position: Int, title: String)
+    fun representImageClicked(position: Int)
 }

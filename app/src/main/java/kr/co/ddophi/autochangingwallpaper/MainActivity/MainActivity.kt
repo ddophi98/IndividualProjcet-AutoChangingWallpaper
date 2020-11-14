@@ -12,9 +12,12 @@ import android.os.Bundle
 import android.os.IBinder
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -30,6 +33,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_recycler.*
 import kr.co.ddophi.autochangingwallpaper.*
 import kr.co.ddophi.autochangingwallpaper.EditActivity.EditAlbumActivity
+import kr.co.ddophi.autochangingwallpaper.EditActivity.PictureShowActivity
 
 
 class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
@@ -45,9 +49,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     private var currentEditPosition = EDIT_NOT_PROCESSING
     private  var currentServicePosition = SERVIE_NOT_RUNNING
 
-    private var SETTING_HOME_SCREEN = false
-    private var SETTING_LOCK_SCREEN = false
-
+    private lateinit var settingValue : SettingValue
     private lateinit var albumData:MutableList<Album>
     private lateinit var adapter: CustomAdapter
 
@@ -91,6 +93,11 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         albumRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        Log.d("로그", "화!면!터!치!")
+        return super.onTouchEvent(event)
+    }
+
     //액션바 메뉴 설정
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
@@ -111,6 +118,13 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     // n번째 아이템의 제목 설정 클릭 및 작성
     override fun albumTitleClicked(position: Int, title: String) {
         albumData[position].albumTitle = title
+    }
+
+    // n번째 아이템의 대표 사진 클릭
+    override fun representImageClicked(position: Int) {
+        val enlargePicture = Intent(this, PictureShowActivity::class.java)
+        enlargePicture.putExtra("Uri", albumData[position].representImage)
+        startActivity(enlargePicture)
     }
 
     // n번째 아이템의 삭제 버튼 클릭
@@ -146,7 +160,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
     // n번째 아이템의 선택 버튼 클릭
     override fun SelectButtonClicked(position: Int) {
-        if(!SETTING_HOME_SCREEN && !SETTING_LOCK_SCREEN) {
+        if(!settingValue.homeScreen && !settingValue.lockScreen) {
             Toast.makeText(this, "설정창에서 적어도 한개의 화면은 선택해주세요", Toast.LENGTH_LONG).show()
         }else {
             if (currentServicePosition != position) {
@@ -157,24 +171,46 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                 ).show()
 
                 val serviceIntent = Intent(this, AutoChangingService::class.java)
-
                 if (currentServicePosition != SERVIE_NOT_RUNNING) {
                     stopService(serviceIntent)
                 }
-
-                for (i in 0 until albumData[position].pictureCount) {
-                    serviceIntent.putExtra("Picture${i}", albumData[position].albumImages[i])
-                }
-                serviceIntent.putExtra("Size", albumData[position].pictureCount)
-                serviceIntent.putExtra("HomeScreen", SETTING_HOME_SCREEN)
-                serviceIntent.putExtra("LockScreen", SETTING_LOCK_SCREEN)
-
+                putValue(serviceIntent, position)
                 ContextCompat.startForegroundService(this, serviceIntent)
                 currentServicePosition = position
             } else {
                 Toast.makeText(this, "이미 선택된 앨범입니다.", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    //intent 에 서비스 실행에 필요한 값들 담기
+    fun putValue(serviceIntent: Intent, position: Int){
+        for (i in 0 until albumData[position].pictureCount) {
+            serviceIntent.putExtra("Picture${i}", albumData[position].albumImages[i])
+        }
+        serviceIntent.putExtra("Size", albumData[position].pictureCount)
+
+        val metrics = DisplayMetrics()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            this.display?.getRealMetrics(metrics)
+        }else{
+            this.display?.getMetrics(metrics)
+        }
+
+        serviceIntent.putExtra("PhoneHeight", metrics.heightPixels)
+        serviceIntent.putExtra("PhoneWidth", metrics.widthPixels)
+
+        serviceIntent.putExtra("HomeScreen", settingValue.homeScreen)
+        serviceIntent.putExtra("LockScreen", settingValue.lockScreen)
+        serviceIntent.putExtra("TimeValue_Home", settingValue.homeTimeValue)
+        serviceIntent.putExtra("TimeType_Home", settingValue.homeTimeType)
+        serviceIntent.putExtra("ImageResize_Home", settingValue.homeImageResize)
+        serviceIntent.putExtra("ImageOrder_Home", settingValue.homeImageOrder)
+        serviceIntent.putExtra("TimeValue_Lock", settingValue.lockTimeValue)
+        serviceIntent.putExtra("TimeType_Lock", settingValue.lockTimeType)
+        serviceIntent.putExtra("ImageResize_Lock", settingValue.lockImageResize)
+        serviceIntent.putExtra("ImageOrder_Lock", settingValue.lockImageOrder)
+        serviceIntent.putExtra("DoubleTap", settingValue.doubleTap)
     }
 
     // 저장소 권한 있는지 확인하고 없으면 요청
@@ -275,16 +311,9 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                         currentServicePosition = SERVIE_NOT_RUNNING
 
                         //서비스 다시 시작
-                        if(!(!SETTING_HOME_SCREEN && !SETTING_LOCK_SCREEN)) {
-                            for (i in 0 until albumData[position].pictureCount) {
-                                serviceIntent.putExtra(
-                                    "Picture${i}",
-                                    albumData[position].albumImages[i]
-                                )
-                            }
-                            serviceIntent.putExtra("Size", albumData[position].pictureCount)
-                            serviceIntent.putExtra("HomeScreen", SETTING_HOME_SCREEN)
-                            serviceIntent.putExtra("LockScreen", SETTING_LOCK_SCREEN)
+                        if(!(!settingValue.homeScreen && !settingValue.lockScreen)) {
+
+                            putValue(serviceIntent, position)
 
                             ContextCompat.startForegroundService(this, serviceIntent)
                             currentServicePosition = position
@@ -359,8 +388,20 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     //설정 값 불러오기
     fun loadSetting() {
         val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        SETTING_HOME_SCREEN = defaultSharedPreferences.getBoolean("HomeScreen", false)
-        SETTING_LOCK_SCREEN = defaultSharedPreferences.getBoolean("LockScreen", false)
+
+        val homeScreen = defaultSharedPreferences.getBoolean("HomeScreen", false)
+        val lockScreen = defaultSharedPreferences.getBoolean("LockScreen", false)
+        val homeTimeValue = defaultSharedPreferences.getString("TimeValue_Home", "")!!
+        val homeTimeType = defaultSharedPreferences.getString("TimeType_Home", "")!!
+        val homeImageResize = defaultSharedPreferences.getString("ImageResize_Home", "")!!
+        val homeImageOrder = defaultSharedPreferences.getString("ImageOrder_Home", "")!!
+        val lockTimeValue = defaultSharedPreferences.getString("TimeValue_Lock", "")!!
+        val lockTimeType = defaultSharedPreferences.getString("TimeType_Lock", "")!!
+        val lockImageResize = defaultSharedPreferences.getString("ImageResize_Lock", "")!!
+        val lockImageOrder = defaultSharedPreferences.getString("ImageOrder_Lock", "")!!
+        val doubleTap = defaultSharedPreferences.getBoolean("DoubleTap", false)
+
+        settingValue = SettingValue(homeScreen, lockScreen, homeTimeValue, homeTimeType, homeImageResize, homeImageOrder, lockTimeValue, lockTimeType, lockImageResize, lockImageOrder, doubleTap)
     }
 
     //앱을 종료하거나 나갈때마다 저장

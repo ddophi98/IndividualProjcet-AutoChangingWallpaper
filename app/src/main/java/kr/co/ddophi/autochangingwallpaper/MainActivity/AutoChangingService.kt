@@ -3,28 +3,28 @@ package kr.co.ddophi.autochangingwallpaper.MainActivity
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.ImageDecoder
+import android.graphics.*
 import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.provider.MediaStore
+import android.util.DisplayMetrics
 import android.util.Log
+import android.view.View
 import androidx.core.app.NotificationCompat
 import androidx.preference.PreferenceManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kr.co.ddophi.autochangingwallpaper.R
 import kr.co.ddophi.autochangingwallpaper.SettingActivity
+import kr.co.ddophi.autochangingwallpaper.SettingValue
+import java.util.*
 
 
 class AutoChangingService : Service() {
 
-    var SETTING_HOME_SCREEN = false
-    var SETTING_LOCK_SCREEN = false
+    lateinit var settingValue : SettingValue
     val CHANNEL_ID = "ForegroundChannel"
     val NOTI_ID = 123
     var isRunning = false
@@ -51,14 +51,14 @@ class AutoChangingService : Service() {
         if(intent != null) {
             loadSetting(intent)
 
-            if(SETTING_HOME_SCREEN) {
+            //세팅값에 따라 홈화면만 실행할지, 잠금화면만 실행할지, 둘 다 실행할지 결정
+            if(settingValue.homeScreen) {
                 runBackground1(intent)
             }
-            if(SETTING_LOCK_SCREEN) {
+            if(settingValue.lockScreen) {
                 runBackground2(intent)
             }
         }
-
         return Service.START_STICKY
     }
 
@@ -81,65 +81,158 @@ class AutoChangingService : Service() {
     //계속해서 배경화면 바꿔주기 (홈화면)
     fun runBackground1(intent: Intent) {
         Log.d("로그", "1서비스")
-        val albumImages = loadData(intent)
+        val albumImages : MutableList<Bitmap>
+
+        //세팅값에 따라 이미지를 fill 로 할지, fit 으로 할지 결정
+        if(settingValue.homeImageResize == "fill"){
+            albumImages = loadDataFill(intent)
+        }else{
+            albumImages = loadDataFit(intent)
+        }
+
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
 
-        var idx = 0
-        GlobalScope.launch(Dispatchers.Default) {
-            while(isRunning){
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    wallpaperManager.setBitmap(albumImages[idx], null, true, WallpaperManager.FLAG_SYSTEM)
-                }
-
-                idx++
-                delay(2000)
-                if(idx == albumImages.size) {
-                    idx = 0
-                }
-
+        //세팅값에 따라 바뀌는 시간 주기를 얼마나 할지 결정
+        val delayTime : Long = when(settingValue.homeTimeType){
+            "seconds" -> {
+                settingValue.homeTimeValue.toLong() * 1000
             }
+            "minutes" -> {
+                settingValue.homeTimeValue.toLong() * 1000 * 60
+            }
+            "hours" -> {
+                settingValue.homeTimeValue.toLong() * 1000 * 60 * 60
+            }
+            else -> {
+                settingValue.homeTimeValue.toLong() * 1000 * 60 * 60 * 24
+            }
+        }
+
+        val idx = 0
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            changingWallpaper(albumImages, wallpaperManager, delayTime, idx, WallpaperManager.FLAG_SYSTEM)
         }
     }
 
     //계속해서 배경화면 바꿔주기 (잠금화면)
     fun runBackground2(intent: Intent) {
         Log.d("로그", "2서비스")
-        val albumImages = loadData(intent)
+        val albumImages : MutableList<Bitmap>
+
+        //세팅값에 따라 이미지를 fill 로 할지, fit 으로 할지 결정
+        if(settingValue.lockImageResize == "fill"){
+            albumImages = loadDataFill(intent)
+        }else{
+            albumImages = loadDataFit(intent)
+        }
+
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
 
-        var idx = 0
-        GlobalScope.launch(Dispatchers.Default) {
-            while(isRunning){
+        //세팅값에 따라 바뀌는 시간 주기를 얼마나 할지 결정
+        val delayTime : Long = when(settingValue.lockTimeType){
+            "seconds" -> {
+                settingValue.lockTimeValue.toLong() * 1000
+            }
+            "minutes" -> {
+                settingValue.lockTimeValue.toLong() * 1000 * 60
+            }
+            "hours" -> {
+                settingValue.lockTimeValue.toLong() * 1000 * 60 * 60
+            }
+            else -> {
+                settingValue.lockTimeValue.toLong() * 1000 * 60 * 60 * 24
+            }
+        }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    wallpaperManager.setBitmap(albumImages[idx], null, true, WallpaperManager.FLAG_LOCK)
+        val idx = 0
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            changingWallpaper(albumImages, wallpaperManager, delayTime, idx, WallpaperManager.FLAG_LOCK)
+        }
+    }
+
+    //세팅값에 따라 사진을 순서대로 바꿀지, 랜덤으로 바꿀지 결정
+    fun changingWallpaper (albumImages : MutableList<Bitmap>, wallpaperManager: WallpaperManager, delayTime : Long, index : Int, flag : Int) {
+        var idx = index
+        if(settingValue.lockImageOrder == "inOrder") {
+            GlobalScope.launch(Dispatchers.Default) {
+                while (isRunning) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        wallpaperManager.setBitmap(albumImages[idx], null, true, flag)
+                    }
+                    delay(delayTime)
+                    idx += 1
+                    if (idx == albumImages.size) {
+                        idx = 0
+                    }
+
                 }
-
-                idx++
-                delay(2000)
-                if(idx == albumImages.size) {
-                    idx = 0
+            }
+        }else{
+            GlobalScope.launch(Dispatchers.Default) {
+                var preIdx = idx
+                val random = Random()
+                while (isRunning) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        wallpaperManager.setBitmap(albumImages[idx], null, true, flag)
+                    }
+                    delay(delayTime)
+                    preIdx = idx
+                    idx = random.nextInt(albumImages.size)
+                    while(idx == preIdx){
+                        idx = random.nextInt(albumImages.size)
+                    }
                 }
-
             }
         }
     }
 
     //세팅 값 받아오기
     fun loadSetting(intent: Intent) {
-        SETTING_HOME_SCREEN = intent.getBooleanExtra("HomeScreen", false)
-        SETTING_LOCK_SCREEN = intent.getBooleanExtra("LockScreen", false)
+
+        val homeScreen = intent.getBooleanExtra("HomeScreen", false)
+        val lockScreen = intent.getBooleanExtra("LockScreen", false)
+        val homeTimeValue = intent.getStringExtra("TimeValue_Home")!!
+        val homeTimeType = intent.getStringExtra("TimeType_Home")!!
+        val homeImageResize = intent.getStringExtra("ImageResize_Home")!!
+        val homeImageOrder = intent.getStringExtra("ImageOrder_Home")!!
+        val lockTimeValue = intent.getStringExtra("TimeValue_Lock")!!
+        val lockTimeType = intent.getStringExtra("TimeType_Lock")!!
+        val lockImageResize = intent.getStringExtra("ImageResize_Lock")!!
+        val lockImageOrder = intent.getStringExtra("ImageOrder_Lock")!!
+        val doubleTap = intent.getBooleanExtra("DoubleTap", false)
+
+        settingValue = SettingValue(homeScreen, lockScreen, homeTimeValue, homeTimeType, homeImageResize, homeImageOrder, lockTimeValue, lockTimeType, lockImageResize, lockImageOrder, doubleTap)
+        Log.d("로그", "받아온 서비스의 세팅값: ${settingValue}")
     }
 
-    //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기
-    fun loadData(intent: Intent) : MutableList<Bitmap> {
+    //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기(fill)
+    fun loadDataFill(intent: Intent) : MutableList<Bitmap> {
+
+        val phoneHeight = intent.getIntExtra("PhoneHeight", 0)
+        val phoneWidth = intent.getIntExtra("PhoneWidth", 0)
+
         val albumImages = mutableListOf<Bitmap>()
         val size = intent.getIntExtra("Size", 0)
         var uri : Uri
         for(i in 0 until size){
             uri = intent.getParcelableExtra<Uri>("Picture${i}")!!
             albumImages.add(uriToBitmap(uri))
+        }
+        return albumImages
+    }
+
+    //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기(fit)
+    fun loadDataFit(intent: Intent) : MutableList<Bitmap> {
+
+        val phoneHeight = intent.getIntExtra("PhoneHeight", 0)
+        val phoneWidth = intent.getIntExtra("PhoneWidth", 0)
+
+        val albumImages = mutableListOf<Bitmap>()
+        val size = intent.getIntExtra("Size", 0)
+        var uri : Uri
+        for(i in 0 until size){
+            uri = intent.getParcelableExtra<Uri>("Picture${i}")!!
+            albumImages.add(resizeBitmap(uriToBitmap(uri), phoneWidth, phoneHeight))
         }
         return albumImages
     }
@@ -157,4 +250,51 @@ class AutoChangingService : Service() {
         }
         return bitmap
     }
+
+    //기존 비트맵(fill)을 잘리지 않도록(fit)_바꿈
+    fun resizeBitmap(bitmap : Bitmap, width : Int, height : Int) : Bitmap {
+        val background = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        val originalWidth : Float = bitmap.width.toFloat()
+        val originalHeight : Float = bitmap.height.toFloat()
+
+        val canvas = Canvas(background)
+
+        val scale : Float = width/originalWidth
+
+        val xTranslation = 0.0f
+        val yTranslation = (height - originalHeight * scale) / 2.0f
+
+        val transformation = Matrix()
+        transformation.postTranslate(xTranslation, yTranslation)
+        transformation.preScale(scale, scale)
+
+        val paint = Paint()
+        paint.isFilterBitmap = true
+
+        canvas.drawBitmap(bitmap, transformation, paint)
+
+        return background
+    }
+}
+
+//미구현
+abstract class DoubleClickListener : View.OnClickListener {
+    val DEFAULT_QUALIFICATION_SPAN : Long = 200
+    var  doubleClickQualificationSpanInMillis : Long? = null
+    var timestampLastClick : Long? = null
+
+    fun DoubleClickListener() {
+        doubleClickQualificationSpanInMillis = DEFAULT_QUALIFICATION_SPAN
+        timestampLastClick = 0
+    }
+
+    override fun onClick(v: View?) {
+        if((SystemClock.elapsedRealtime() - timestampLastClick!!) < doubleClickQualificationSpanInMillis!!) {
+            onDoubleClick()
+        }
+        timestampLastClick = SystemClock.elapsedRealtime()
+    }
+
+    abstract fun onDoubleClick()
 }

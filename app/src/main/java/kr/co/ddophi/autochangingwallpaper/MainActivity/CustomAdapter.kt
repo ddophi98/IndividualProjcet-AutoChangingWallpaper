@@ -49,6 +49,7 @@ class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface, val activity
             itemView.btnDelete.setOnClickListener { recyclerViewInterface.DeleteButtonClicked(adapterPosition) }
             itemView.btnEdit.setOnClickListener {recyclerViewInterface.EditButtonClicked(adapterPosition)}
             itemView.btnSelect.setOnClickListener {recyclerViewInterface.SelectButtonClicked(adapterPosition)}
+            itemView.albumImage.setOnClickListener {recyclerViewInterface.representImageClicked(adapterPosition)}
 
             // 키보드 완료 버튼을 눌렀을 때 동작 (저장, 키보드 내리기, 포커스 해제)
             itemView.albumTitle.setOnEditorActionListener { v, actionId, event ->

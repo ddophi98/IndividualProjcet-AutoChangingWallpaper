@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_picture_show.*
 import kr.co.ddophi.autochangingwallpaper.R
 
@@ -25,7 +26,7 @@ class PictureShowActivity : AppCompatActivity() {
 
         //클릭하면 검은화면, 흰화면 중에서 보여주기
         enlargedPicture.setOnClickListener {
-            if(actionBarShow == false){
+            if(!actionBarShow){
                 actionBarShow =true
                 supportActionBar?.show()
                 pictureBackground.setBackgroundColor(Color.WHITE)
@@ -35,6 +36,15 @@ class PictureShowActivity : AppCompatActivity() {
                 pictureBackground.setBackgroundColor(Color.BLACK)
             }
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            android.R.id.home -> {
+                onBackPressed()
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
 

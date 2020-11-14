@@ -43,10 +43,14 @@ class SettingActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             addPreferencesFromResource(R.xml.preferences_setting)
 
-            setOnPreferenceChange(findPreference("TimeCycleNumber")!!)
-            setOnPreferenceChange(findPreference("TimeCycleType")!!)
-            setOnPreferenceChange(findPreference("ImageResize")!!)
-            setOnPreferenceChange(findPreference("ImageOrder")!!)
+            setOnPreferenceChange(findPreference("TimeValue_Home")!!)
+            setOnPreferenceChange(findPreference("TimeType_Home")!!)
+            setOnPreferenceChange(findPreference("ImageResize_Home")!!)
+            setOnPreferenceChange(findPreference("ImageOrder_Home")!!)
+            setOnPreferenceChange(findPreference("TimeValue_Lock")!!)
+            setOnPreferenceChange(findPreference("TimeType_Lock")!!)
+            setOnPreferenceChange(findPreference("ImageResize_Lock")!!)
+            setOnPreferenceChange(findPreference("ImageOrder_Lock")!!)
 
             val preferenceName = this.preferenceManager.sharedPreferencesName
         }
