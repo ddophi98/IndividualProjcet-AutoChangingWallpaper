@@ -2,27 +2,32 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="적용 화면">
+    <PreferenceCategory
+        android:title="적용 화면"
+        android:layout="@layout/preference_background1">
         <SwitchPreference
             android:defaultValue="true"
             android:key="HomeScreen"
+            android:summary="홈화면의 배경을 설정합니다."
             android:title="홈화면" />
         <SwitchPreference
             android:defaultValue="true"
             android:key="LockScreen"
+            android:summary="잠금화면의 배경을 설정합니다."
             android:title="잠금화면" />
     </PreferenceCategory>
 
     <PreferenceCategory
         android:dependency="HomeScreen"
-        android:title="홈화면">
+        android:title="홈화면"
+        android:layout="@layout/preference_background2">
         <EditTextPreference
             android:defaultValue="1"
             android:key="TimeValue_Home"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:summary="1"
-            android:title="시간" />
+            android:title="시간 (1~60 사이의 숫자)" />
         <ListPreference
             android:defaultValue="minutes"
             android:entries="@array/change_cycle_time"
@@ -48,14 +53,15 @@
 
     <PreferenceCategory
         android:dependency="LockScreen"
-        android:title="잠금화면">
+        android:title="잠금화면"
+        android:layout="@layout/preference_background3">
         <EditTextPreference
             android:defaultValue="1"
             android:key="TimeValue_Lock"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:summary="1"
-            android:title="시간" />
+            android:title="시간 (1~60 사이의 숫자)" />
         <ListPreference
             android:defaultValue="minutes"
             android:entries="@array/change_cycle_time"

@@ -24,16 +24,14 @@ class PictureShowActivity : AppCompatActivity() {
         supportActionBar?.setTitle("")
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        //클릭하면 검은화면, 흰화면 중에서 보여주기
+        //클릭하면 액션바 없애고 보여주기
         enlargedPicture.setOnClickListener {
             if(!actionBarShow){
                 actionBarShow =true
                 supportActionBar?.show()
-                pictureBackground.setBackgroundColor(Color.WHITE)
             }else{
                 actionBarShow = false
                 supportActionBar?.hide()
-                pictureBackground.setBackgroundColor(Color.BLACK)
             }
         }
     }

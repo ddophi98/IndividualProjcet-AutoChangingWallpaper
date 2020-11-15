@@ -71,7 +71,7 @@ class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface, val activity
 
         fun setAlbum(album : Album) {
             itemView.albumTitle.setText(album.albumTitle)
-            itemView.pictureCount.text = "${album.pictureCount}"
+            itemView.pictureCount.text = "${album.pictureCount} photos"
             itemView.albumImage.setImageURI(album.representImage)
         }
     }

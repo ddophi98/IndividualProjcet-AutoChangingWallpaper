@@ -11,10 +11,10 @@
     </string-array>
 
     <string-array name="change_cycle_time">
-        <item>초(seconds)</item>
-        <item>분(minutes)</item>
-        <item>시간(hours)</item>
-        <item>일(days)</item>
+        <item>초(second)</item>
+        <item>분(minute)</item>
+        <item>시간(hour)</item>
+        <item>일(day)</item>
     </string-array>
 
     <string-array name="change_cycle_time_value">
@@ -35,8 +35,8 @@
     </string-array>
 
     <string-array name="image_resize">
-        <item>fill</item>
-        <item>fit</item>
+        <item>빈공간 없이 채우기 (fill)</item>
+        <item>사진이 잘리지 않게 하기 (fit)</item>
     </string-array>
 
     <string-array name="image_resize_value">

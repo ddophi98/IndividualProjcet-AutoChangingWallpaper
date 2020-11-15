@@ -380,6 +380,11 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                 }
             }
         }
+
+        if(result && string.toInt() !in 1..60){
+                result = false
+        }
+
         return result
     }
 

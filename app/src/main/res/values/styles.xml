@@ -14,9 +14,10 @@
         <item name="android:windowActionBarOverlay">true</item>
     </style>
 
-    <style name="AppCompatTheme" parent = "Theme.AppCompat.Light.DarkActionBar">
+    <style name="PreferenceTheme" parent = "Theme.AppCompat.Light.DarkActionBar">
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
+
 
 
 </resources>

@@ -5,12 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="150dp"
     android:layout_margin="10dp"
-    android:background="#DCBBBB">
+    android:background="#000000">
 
     <ImageView
         android:id="@+id/pictureInAlbum"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:cropToPadding="true"
+        android:padding="3dp"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

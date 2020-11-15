@@ -8,19 +8,22 @@
     android:layout_marginTop="15dp"
     android:layout_marginRight="15dp"
     android:layout_marginBottom="0dp"
-    android:background="#54C320"
+    android:background="@drawable/album_outside"
     android:orientation="vertical">
 
     <ImageView
         android:id="@+id/albumImage"
-        android:layout_width="128dp"
-        android:layout_height="128dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/colorAlbumOutside"
+        android:cropToPadding="true"
+        android:padding="3dp"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/albumTitle"
@@ -35,13 +38,15 @@
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="4dp"
         android:ems="10"
         android:focusable="auto"
+        android:fontFamily="monospace"
         android:hint="Album"
         android:imeOptions="actionDone"
         android:inputType="textPersonName"
         android:textSize="20sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/pictureCount"
         app:layout_constraintStart_toEndOf="@+id/albumImage"
         app:layout_constraintTop_toTopOf="parent" />
@@ -50,11 +55,12 @@
         android:id="@+id/pictureCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:fontFamily="serif"
         android:text="250 photos"
         android:textSize="12sp"
+        android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/albumImage"
         app:layout_constraintTop_toBottomOf="@+id/albumTitle" />
 
@@ -62,69 +68,76 @@
         android:id="@+id/btnEdit"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginTop="39dp"
-        app:layout_constraintEnd_toStartOf="@+id/btnSelect"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btnDelete"
-        app:layout_constraintTop_toBottomOf="@+id/albumTitle"
-        app:srcCompat="@android:drawable/ic_menu_edit" />
+        android:layout_marginBottom="4dp"
+        android:background="@color/colorInvisible"
+        app:layout_constraintBottom_toTopOf="@+id/textEdit"
+        app:layout_constraintEnd_toEndOf="@+id/textEdit"
+        app:layout_constraintStart_toStartOf="@+id/textEdit"
+        app:srcCompat="@drawable/ic_edit_blue_40dp" />
 
     <ImageButton
         android:id="@+id/btnSelect"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginTop="39dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btnEdit"
-        app:layout_constraintTop_toBottomOf="@+id/albumTitle"
-        app:srcCompat="@android:drawable/checkbox_off_background" />
+        android:layout_marginBottom="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/textSelect"
+        app:layout_constraintEnd_toEndOf="@+id/textSelect"
+        app:layout_constraintStart_toStartOf="@+id/textSelect"
+        app:srcCompat="@drawable/ic_photo_size_select_actual_blue_40dp" />
 
     <ImageButton
         android:id="@+id/btnDelete"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginTop="15dp"
-        app:layout_constraintEnd_toStartOf="@+id/btnEdit"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/albumImage"
-        app:layout_constraintTop_toBottomOf="@+id/pictureCount"
-        app:srcCompat="@android:drawable/ic_menu_delete" />
-
-    <TextView
-        android:id="@+id/textDelete"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="delete"
-        android:textSize="10sp"
-        app:layout_constraintEnd_toStartOf="@+id/textEdit"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/albumImage"
-        app:layout_constraintTop_toBottomOf="@+id/btnDelete" />
-
-    <TextView
-        android:id="@+id/textEdit"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="edit"
-        android:textSize="10sp"
-        app:layout_constraintEnd_toStartOf="@+id/textSelect"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/textDelete"
-        app:layout_constraintTop_toBottomOf="@+id/btnEdit" />
+        android:layout_marginBottom="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/textDelete"
+        app:layout_constraintEnd_toEndOf="@+id/textDelete"
+        app:layout_constraintStart_toStartOf="@+id/textDelete"
+        app:srcCompat="@drawable/ic_delete_forever_blue_40p" />
 
     <TextView
         android:id="@+id/textSelect"
-        android:layout_width="30dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
         android:text="select"
         android:textSize="10sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/textEdit"
-        app:layout_constraintTop_toBottomOf="@+id/btnSelect" />
+        app:layout_constraintStart_toEndOf="@+id/textEdit" />
+
+    <TextView
+        android:id="@+id/textEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="sans-serif-smallcaps"
+        android:gravity="center"
+        android:text="edit"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/textSelect"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/textDelete" />
+
+    <TextView
+        android:id="@+id/textDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="sans-serif-smallcaps"
+        android:gravity="center"
+        android:text="delete"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/textEdit"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/albumImage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

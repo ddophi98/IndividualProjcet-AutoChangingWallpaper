@@ -36,10 +36,12 @@ class EditAlbumActivity : AppCompatActivity() {
             openGallery()
         }
 
-        supportActionBar?.setTitle(albumTitle)
+        if(albumTitle == ""){
+            supportActionBar?.title = "Album"
+        }else {
+            supportActionBar?.title = albumTitle
+        }
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        Toast.makeText(this, "사진을 선택하려면 꾹 누르세요\n(짧게 터치하면 사진을 자세히 볼 수 있습니다.)", Toast.LENGTH_LONG).show()
     }
 
     // 어답터 연결
