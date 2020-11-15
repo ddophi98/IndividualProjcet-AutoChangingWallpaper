@@ -163,22 +163,26 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         if(!settingValue.homeScreen && !settingValue.lockScreen) {
             Toast.makeText(this, "설정창에서 적어도 한개의 화면은 선택해주세요", Toast.LENGTH_LONG).show()
         }else {
-            if (currentServicePosition != position) {
-                Toast.makeText(
-                    this,
-                    "${albumData[position].albumTitle} 앨범이 선택되었습니다. 배경화면이 자동으로 바뀝니다.",
-                    Toast.LENGTH_LONG
-                ).show()
+            if((!isNumber(settingValue.homeTimeValue) && settingValue.homeScreen) || (!isNumber(settingValue.lockTimeValue) && settingValue.lockScreen)) {
+                Toast.makeText(this, "설정창에서 시간을 제대로 입력해주세요", Toast.LENGTH_LONG).show()
+            }else {
+                if (currentServicePosition != position) {
+                    Toast.makeText(
+                        this,
+                        "${albumData[position].albumTitle} 앨범이 선택되었습니다. 배경화면이 자동으로 바뀝니다.",
+                        Toast.LENGTH_LONG
+                    ).show()
 
-                val serviceIntent = Intent(this, AutoChangingService::class.java)
-                if (currentServicePosition != SERVIE_NOT_RUNNING) {
-                    stopService(serviceIntent)
+                    val serviceIntent = Intent(this, AutoChangingService::class.java)
+                    if (currentServicePosition != SERVIE_NOT_RUNNING) {
+                        stopService(serviceIntent)
+                    }
+                    putValue(serviceIntent, position)
+                    ContextCompat.startForegroundService(this, serviceIntent)
+                    currentServicePosition = position
+                } else {
+                    Toast.makeText(this, "이미 선택된 앨범입니다.", Toast.LENGTH_SHORT).show()
                 }
-                putValue(serviceIntent, position)
-                ContextCompat.startForegroundService(this, serviceIntent)
-                currentServicePosition = position
-            } else {
-                Toast.makeText(this, "이미 선택된 앨범입니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -210,7 +214,6 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         serviceIntent.putExtra("TimeType_Lock", settingValue.lockTimeType)
         serviceIntent.putExtra("ImageResize_Lock", settingValue.lockImageResize)
         serviceIntent.putExtra("ImageOrder_Lock", settingValue.lockImageOrder)
-        serviceIntent.putExtra("DoubleTap", settingValue.doubleTap)
     }
 
     // 저장소 권한 있는지 확인하고 없으면 요청
@@ -312,11 +315,13 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
 
                         //서비스 다시 시작
                         if(!(!settingValue.homeScreen && !settingValue.lockScreen)) {
-
-                            putValue(serviceIntent, position)
-
-                            ContextCompat.startForegroundService(this, serviceIntent)
-                            currentServicePosition = position
+                            if((!isNumber(settingValue.homeTimeValue) && settingValue.homeScreen) || (!isNumber(settingValue.lockTimeValue) && settingValue.lockScreen)){
+                                Toast.makeText(this, "설정창에서 시간을 제대로 입력해주세요", Toast.LENGTH_LONG).show()
+                            }else {
+                                putValue(serviceIntent, position)
+                                ContextCompat.startForegroundService(this, serviceIntent)
+                                currentServicePosition = position
+                            }
                         }
                     }
                 }
@@ -360,6 +365,24 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         alertDialog.show()
     }
 
+    //문자열이 숫자인지 검사
+    fun isNumber(string: String) : Boolean {
+        var result = true
+        if(string == ""){
+            result = false
+        }else if(string[0].hashCode() == 48){
+            result = false
+        }else{
+            for(i in 0 until string.length){
+                val char : Int = string[i].hashCode()
+                if(char < 48 || char > 57) {
+                    result = false
+                }
+            }
+        }
+        return result
+    }
+
     //데이터 저장(albumData)
     fun saveData() {
         val sharedPreferences = getSharedPreferences("SharedPreferences_AlbumData", Context.MODE_PRIVATE)
@@ -399,9 +422,8 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         val lockTimeType = defaultSharedPreferences.getString("TimeType_Lock", "")!!
         val lockImageResize = defaultSharedPreferences.getString("ImageResize_Lock", "")!!
         val lockImageOrder = defaultSharedPreferences.getString("ImageOrder_Lock", "")!!
-        val doubleTap = defaultSharedPreferences.getBoolean("DoubleTap", false)
 
-        settingValue = SettingValue(homeScreen, lockScreen, homeTimeValue, homeTimeType, homeImageResize, homeImageOrder, lockTimeValue, lockTimeType, lockImageResize, lockImageOrder, doubleTap)
+        settingValue = SettingValue(homeScreen, lockScreen, homeTimeValue, homeTimeType, homeImageResize, homeImageOrder, lockTimeValue, lockTimeType, lockImageResize, lockImageOrder)
     }
 
     //앱을 종료하거나 나갈때마다 저장

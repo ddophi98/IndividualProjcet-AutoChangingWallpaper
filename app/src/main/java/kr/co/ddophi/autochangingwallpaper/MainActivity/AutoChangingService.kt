@@ -199,9 +199,8 @@ class AutoChangingService : Service() {
         val lockTimeType = intent.getStringExtra("TimeType_Lock")!!
         val lockImageResize = intent.getStringExtra("ImageResize_Lock")!!
         val lockImageOrder = intent.getStringExtra("ImageOrder_Lock")!!
-        val doubleTap = intent.getBooleanExtra("DoubleTap", false)
 
-        settingValue = SettingValue(homeScreen, lockScreen, homeTimeValue, homeTimeType, homeImageResize, homeImageOrder, lockTimeValue, lockTimeType, lockImageResize, lockImageOrder, doubleTap)
+        settingValue = SettingValue(homeScreen, lockScreen, homeTimeValue, homeTimeType, homeImageResize, homeImageOrder, lockTimeValue, lockTimeType, lockImageResize, lockImageOrder)
         Log.d("로그", "받아온 서비스의 세팅값: ${settingValue}")
     }
 
@@ -276,25 +275,4 @@ class AutoChangingService : Service() {
 
         return background
     }
-}
-
-//미구현
-abstract class DoubleClickListener : View.OnClickListener {
-    val DEFAULT_QUALIFICATION_SPAN : Long = 200
-    var  doubleClickQualificationSpanInMillis : Long? = null
-    var timestampLastClick : Long? = null
-
-    fun DoubleClickListener() {
-        doubleClickQualificationSpanInMillis = DEFAULT_QUALIFICATION_SPAN
-        timestampLastClick = 0
-    }
-
-    override fun onClick(v: View?) {
-        if((SystemClock.elapsedRealtime() - timestampLastClick!!) < doubleClickQualificationSpanInMillis!!) {
-            onDoubleClick()
-        }
-        timestampLastClick = SystemClock.elapsedRealtime()
-    }
-
-    abstract fun onDoubleClick()
 }

@@ -55,6 +55,7 @@ class SettingActivity : AppCompatActivity() {
             val preferenceName = this.preferenceManager.sharedPreferencesName
         }
 
+        //설정 바꿀때마다 Summary 글도 바꾸기
         val onPreferenceChangeListener : Preference.OnPreferenceChangeListener = object: Preference.OnPreferenceChangeListener{
             override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
 

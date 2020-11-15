@@ -78,14 +78,4 @@
             android:summary="순서대로"
             android:title="사진 순서" />
     </PreferenceCategory>
-
-    <PreferenceCategory android:title="기타">
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="DoubleTap"
-            android:summaryOff="사용안함"
-            android:summaryOn="사용"
-            android:title="Double tap 으로 사진을 넘깁니다" />
-    </PreferenceCategory>
-
 </PreferenceScreen>

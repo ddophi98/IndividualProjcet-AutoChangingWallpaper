@@ -10,6 +10,5 @@ data class SettingValue (
     var lockTimeValue : String,
     var lockTimeType : String,
     var lockImageResize : String,
-    var lockImageOrder : String,
-    var doubleTap  : Boolean
+    var lockImageOrder : String
 )
