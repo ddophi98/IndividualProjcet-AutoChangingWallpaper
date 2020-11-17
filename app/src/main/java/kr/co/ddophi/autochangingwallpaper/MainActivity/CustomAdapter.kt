@@ -9,9 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.item_recycler.*
 import kotlinx.android.synthetic.main.item_recycler.view.*
 import kr.co.ddophi.autochangingwallpaper.Album
 import kr.co.ddophi.autochangingwallpaper.R
@@ -20,7 +18,8 @@ import kr.co.ddophi.autochangingwallpaper.R
 class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface, val activity: AppCompatActivity) : RecyclerView.Adapter<CustomAdapter.Holder>() {
 
     var albumData = mutableListOf<Album>()
-    var recyclerViewInterface : MyRecyclerViewInterface? = null
+    var currentServicePosition = -1
+    private var recyclerViewInterface : MyRecyclerViewInterface? = null
 
     init{
         this.recyclerViewInterface = recyclerViewInterface
@@ -46,9 +45,9 @@ class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface, val activity
         var title : String = ""
 
         init{
-            itemView.btnDelete.setOnClickListener { recyclerViewInterface.DeleteButtonClicked(adapterPosition) }
-            itemView.btnEdit.setOnClickListener {recyclerViewInterface.EditButtonClicked(adapterPosition)}
-            itemView.btnSelect.setOnClickListener {recyclerViewInterface.SelectButtonClicked(adapterPosition)}
+            itemView.btnDelete.setOnClickListener { recyclerViewInterface.deleteButtonClicked(adapterPosition) }
+            itemView.btnEdit.setOnClickListener {recyclerViewInterface.editButtonClicked(adapterPosition)}
+            itemView.btnSelect.setOnClickListener {recyclerViewInterface.selectButtonClicked(adapterPosition)}
             itemView.albumImage.setOnClickListener {recyclerViewInterface.representImageClicked(adapterPosition)}
 
             // 키보드 완료 버튼을 눌렀을 때 동작 (저장, 키보드 내리기, 포커스 해제)
@@ -73,6 +72,11 @@ class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface, val activity
             itemView.albumTitle.setText(album.albumTitle)
             itemView.pictureCount.text = "${album.pictureCount} photos"
             itemView.albumImage.setImageURI(album.representImage)
+            if(currentServicePosition == adapterPosition){
+                itemView.albumchecked.visibility = View.VISIBLE
+            }else{
+                itemView.albumchecked.visibility = View.INVISIBLE
+            }
         }
     }
 }

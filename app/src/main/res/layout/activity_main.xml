@@ -17,18 +17,20 @@
         android:background="@color/colorMainBackground1"
         app:layout_constraintBottom_toTopOf="@+id/btnAddAlbum"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+    </androidx.recyclerview.widget.RecyclerView>
 
     <ImageButton
         android:id="@+id/btnAddAlbum"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="60dp"
-        android:layout_marginLeft="60dp"
         android:layout_marginBottom="8dp"
         android:background="@color/colorInvisible"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/advertiseSpace"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/albumRecyclerView"
         app:srcCompat="@drawable/ic_add_circle_purple_60dp" />
@@ -38,15 +40,38 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="60dp"
-        android:layout_marginRight="60dp"
         android:layout_marginBottom="8dp"
         android:text="Stop"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/advertiseSpace"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/btnAddAlbum"
-        app:layout_constraintTop_toBottomOf="@+id/albumRecyclerView"
-        app:layout_constraintVertical_bias="0.631" />
+        app:layout_constraintTop_toBottomOf="@+id/albumRecyclerView" />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/advertiseSpace"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="5dp"
+        app:adSize="BANNER"
+        app:adUnitId="ca-app-pub-8327816292835621/6436554875"
+        app:layout_constraintBottom_toBottomOf="@+id/advertiseSpace"
+        app:layout_constraintEnd_toEndOf="@+id/advertiseSpace"
+        app:layout_constraintStart_toStartOf="@+id/advertiseSpace" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+

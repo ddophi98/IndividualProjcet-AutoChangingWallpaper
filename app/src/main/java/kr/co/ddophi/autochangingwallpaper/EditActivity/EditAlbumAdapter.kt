@@ -28,7 +28,7 @@ class EditAlbumAdapter(val activity: AppCompatActivity, val title: String?, val 
     }
 
     override fun onBindViewHolder(holder: PictureHolder, position: Int) {
-        val pictureUri = album.get(position)
+        val pictureUri = album[position]
         //각각의 사진들 보이도록 연결해주기
         holder.setPicture(pictureUri)
 
@@ -83,14 +83,18 @@ class EditAlbumAdapter(val activity: AppCompatActivity, val title: String?, val 
 
                             //대표 사진 버튼 클릭
                             R.id.btnRepresent -> {
-                                if(selectedList.size == 1){
-                                    representImage = selectedList[0]
-                                    holder.itemView.iconRepresent.visibility = View.VISIBLE
-                                    mode?.finish()
-                                }else if(selectedList.size > 1){
-                                    Toast.makeText(activity, "대표 사진은 한개만 선택해야합니다.", Toast.LENGTH_SHORT).show()
-                                }else{
-                                    Toast.makeText(activity, "대표 사진은 적어도 한개는 선택해야합니다.", Toast.LENGTH_SHORT).show()
+                                when {
+                                    selectedList.size == 1 -> {
+                                        representImage = selectedList[0]
+                                        holder.itemView.iconRepresent.visibility = View.VISIBLE
+                                        mode?.finish()
+                                    }
+                                    selectedList.size > 1 -> {
+                                        Toast.makeText(activity, "대표 사진은 한개만 선택해야합니다.", Toast.LENGTH_SHORT).show()
+                                    }
+                                    else -> {
+                                        Toast.makeText(activity, "대표 사진은 적어도 한개는 선택해야합니다.", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
@@ -143,7 +147,7 @@ class EditAlbumAdapter(val activity: AppCompatActivity, val title: String?, val 
 
     //사진 선택
     fun selectItem(holder : RecyclerView.ViewHolder) {
-        val pictureUri = album.get(holder.adapterPosition)
+        val pictureUri = album[holder.adapterPosition]
 
         if(holder.itemView.iconChecked.visibility == View.INVISIBLE){
             holder.itemView.iconChecked.visibility = View.VISIBLE
@@ -165,10 +169,10 @@ class EditAlbumAdapter(val activity: AppCompatActivity, val title: String?, val 
             .setPositiveButton("확인") { dialog, which ->
 
                 if(selectedList.contains(representImage)){
-                    if(representImage == album[0]){
-                        representImage = album[1]
+                    representImage = if(representImage == album[0]){
+                        album[1]
                     }else {
-                        representImage = album[0]
+                        album[0]
                     }
                 }
 

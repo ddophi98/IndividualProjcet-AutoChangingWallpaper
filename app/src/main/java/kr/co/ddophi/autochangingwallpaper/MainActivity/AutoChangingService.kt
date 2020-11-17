@@ -1,23 +1,17 @@
 package kr.co.ddophi.autochangingwallpaper.MainActivity
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.os.SystemClock
 import android.provider.MediaStore
-import android.util.DisplayMetrics
 import android.util.Log
-import android.view.View
 import androidx.core.app.NotificationCompat
-import androidx.preference.PreferenceManager
 import kotlinx.coroutines.*
 import kr.co.ddophi.autochangingwallpaper.R
-import kr.co.ddophi.autochangingwallpaper.SettingActivity
 import kr.co.ddophi.autochangingwallpaper.SettingValue
 import java.util.*
 
@@ -41,8 +35,8 @@ class AutoChangingService : Service() {
 
         createNotificationChannel()
         val notification : Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Foreground Service")
-            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .setContentTitle("배경화면 변경 진행중")
+            .setSmallIcon(R.mipmap.ic_app_show)
             .build()
 
         startForeground(NOTI_ID, notification)
@@ -59,7 +53,7 @@ class AutoChangingService : Service() {
                 runBackground2(intent)
             }
         }
-        return Service.START_STICKY
+        return START_STICKY
     }
 
     //서비스 종료
@@ -70,24 +64,23 @@ class AutoChangingService : Service() {
     }
 
     //알림 채널 만들기
-    fun createNotificationChannel() {
+    private fun createNotificationChannel() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(CHANNEL_ID, "Foreground Service Channel", NotificationManager.IMPORTANCE_MIN)
+            val notificationChannel = NotificationChannel(CHANNEL_ID, "자동 배경화면 바꾸기 알림", NotificationManager.IMPORTANCE_MIN)
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(notificationChannel)
         }
     }
 
     //계속해서 배경화면 바꿔주기 (홈화면)
-    fun runBackground1(intent: Intent) {
+    private fun runBackground1(intent: Intent) {
         Log.d("로그", "1서비스")
-        val albumImages : MutableList<Bitmap>
 
         //세팅값에 따라 이미지를 fill 로 할지, fit 으로 할지 결정
-        if(settingValue.homeImageResize == "fill"){
-            albumImages = loadDataFill(intent)
+        val albumImages : MutableList<Bitmap> = if(settingValue.homeImageResize == "fill"){
+            loadDataFill(intent)
         }else{
-            albumImages = loadDataFit(intent)
+            loadDataFit(intent)
         }
 
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
@@ -108,22 +101,20 @@ class AutoChangingService : Service() {
             }
         }
 
-        val idx = 0
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            changingWallpaper(albumImages, wallpaperManager, delayTime, idx, WallpaperManager.FLAG_SYSTEM)
+            changingWallpaper(albumImages, wallpaperManager, delayTime, WallpaperManager.FLAG_SYSTEM)
         }
     }
 
     //계속해서 배경화면 바꿔주기 (잠금화면)
-    fun runBackground2(intent: Intent) {
+    private fun runBackground2(intent: Intent) {
         Log.d("로그", "2서비스")
-        val albumImages : MutableList<Bitmap>
 
         //세팅값에 따라 이미지를 fill 로 할지, fit 으로 할지 결정
-        if(settingValue.lockImageResize == "fill"){
-            albumImages = loadDataFill(intent)
+        val albumImages : MutableList<Bitmap> = if(settingValue.lockImageResize == "fill"){
+            loadDataFill(intent)
         }else{
-            albumImages = loadDataFit(intent)
+            loadDataFit(intent)
         }
 
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
@@ -144,15 +135,14 @@ class AutoChangingService : Service() {
             }
         }
 
-        val idx = 0
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            changingWallpaper(albumImages, wallpaperManager, delayTime, idx, WallpaperManager.FLAG_LOCK)
+            changingWallpaper(albumImages, wallpaperManager, delayTime, WallpaperManager.FLAG_LOCK)
         }
     }
 
     //세팅값에 따라 사진을 순서대로 바꿀지, 랜덤으로 바꿀지 결정
-    fun changingWallpaper (albumImages : MutableList<Bitmap>, wallpaperManager: WallpaperManager, delayTime : Long, index : Int, flag : Int) {
-        var idx = index
+    private fun changingWallpaper (albumImages : MutableList<Bitmap>, wallpaperManager: WallpaperManager, delayTime : Long, flag : Int) {
+        var idx = 0
         if(settingValue.lockImageOrder == "inOrder") {
             GlobalScope.launch(Dispatchers.Default) {
                 while (isRunning) {
@@ -169,7 +159,7 @@ class AutoChangingService : Service() {
             }
         }else{
             GlobalScope.launch(Dispatchers.Default) {
-                var preIdx = idx
+                var preIdx: Int
                 val random = Random()
                 while (isRunning) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -187,7 +177,7 @@ class AutoChangingService : Service() {
     }
 
     //세팅 값 받아오기
-    fun loadSetting(intent: Intent) {
+    private fun loadSetting(intent: Intent) {
 
         val homeScreen = intent.getBooleanExtra("HomeScreen", false)
         val lockScreen = intent.getBooleanExtra("LockScreen", false)
@@ -201,27 +191,24 @@ class AutoChangingService : Service() {
         val lockImageOrder = intent.getStringExtra("ImageOrder_Lock")!!
 
         settingValue = SettingValue(homeScreen, lockScreen, homeTimeValue, homeTimeType, homeImageResize, homeImageOrder, lockTimeValue, lockTimeType, lockImageResize, lockImageOrder)
-        Log.d("로그", "받아온 서비스의 세팅값: ${settingValue}")
+        Log.d("로그", "받아온 서비스의 세팅값: $settingValue")
     }
 
     //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기(fill)
-    fun loadDataFill(intent: Intent) : MutableList<Bitmap> {
-
-        val phoneHeight = intent.getIntExtra("PhoneHeight", 0)
-        val phoneWidth = intent.getIntExtra("PhoneWidth", 0)
+    private fun loadDataFill(intent: Intent) : MutableList<Bitmap> {
 
         val albumImages = mutableListOf<Bitmap>()
         val size = intent.getIntExtra("Size", 0)
         var uri : Uri
         for(i in 0 until size){
-            uri = intent.getParcelableExtra<Uri>("Picture${i}")!!
+            uri = intent.getParcelableExtra("Picture${i}")!!
             albumImages.add(uriToBitmap(uri))
         }
         return albumImages
     }
 
     //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기(fit)
-    fun loadDataFit(intent: Intent) : MutableList<Bitmap> {
+    private fun loadDataFit(intent: Intent) : MutableList<Bitmap> {
 
         val phoneHeight = intent.getIntExtra("PhoneHeight", 0)
         val phoneWidth = intent.getIntExtra("PhoneWidth", 0)
@@ -230,20 +217,20 @@ class AutoChangingService : Service() {
         val size = intent.getIntExtra("Size", 0)
         var uri : Uri
         for(i in 0 until size){
-            uri = intent.getParcelableExtra<Uri>("Picture${i}")!!
+            uri = intent.getParcelableExtra("Picture${i}")!!
             albumImages.add(resizeBitmap(uriToBitmap(uri), phoneWidth, phoneHeight))
         }
         return albumImages
     }
 
     //Uri 를 Bitmap 으로 변경
-    fun uriToBitmap(uri: Uri) : Bitmap {
+    private fun uriToBitmap(uri: Uri) : Bitmap {
         val bitmap : Bitmap
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val decode = ImageDecoder.createSource(this.contentResolver, uri)
             bitmap = ImageDecoder.decodeBitmap(decode)
         } else {
-            Log.d("ProjectLog", "Picture Uri : ${uri}")
+            Log.d("ProjectLog", "Picture Uri : $uri")
             bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
             Log.d("ProjectLog", "Converted")
         }
@@ -251,7 +238,7 @@ class AutoChangingService : Service() {
     }
 
     //기존 비트맵(fill)을 잘리지 않도록(fit)_바꿈
-    fun resizeBitmap(bitmap : Bitmap, width : Int, height : Int) : Bitmap {
+    private fun resizeBitmap(bitmap : Bitmap, width : Int, height : Int) : Bitmap {
         val background = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 
         val originalWidth : Float = bitmap.width.toFloat()

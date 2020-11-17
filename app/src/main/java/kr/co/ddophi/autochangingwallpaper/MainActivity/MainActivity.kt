@@ -2,35 +2,28 @@ package kr.co.ddophi.autochangingwallpaper.MainActivity
 
 import android.Manifest
 import android.app.Activity
-import android.app.Service
 import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.IBinder
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
-import android.view.WindowManager
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.item_recycler.*
 import kr.co.ddophi.autochangingwallpaper.*
 import kr.co.ddophi.autochangingwallpaper.EditActivity.EditAlbumActivity
 import kr.co.ddophi.autochangingwallpaper.EditActivity.PictureShowActivity
@@ -53,10 +46,19 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     private lateinit var albumData:MutableList<Album>
     private lateinit var adapter: CustomAdapter
 
+    private lateinit var mAdView : AdView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        MobileAds.initialize(this) {}
+
+        mAdView = findViewById(R.id.adView)
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)
+
+
 
         //기존 데이터와 설정값 가져오기
         loadData()
@@ -80,15 +82,18 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                 val serviceIntent = Intent(this, AutoChangingService::class.java)
                 stopService(serviceIntent)
                 currentServicePosition = SERVIE_NOT_RUNNING
+                adapter.currentServicePosition = currentServicePosition
+                adapter.notifyDataSetChanged()
                 Toast.makeText(this, "자동 배경화면 바꾸기가 종료되었습니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     // 어답터 연결
-    fun connectAdapter () {
+    private fun connectAdapter () {
         adapter = CustomAdapter(this, this)
         adapter.albumData = albumData
+        adapter.currentServicePosition = currentServicePosition
         albumRecyclerView.adapter = adapter
         albumRecyclerView.layoutManager = LinearLayoutManager(this)
     }
@@ -128,13 +133,15 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     // n번째 아이템의 삭제 버튼 클릭
-    override fun DeleteButtonClicked(position: Int) {
+    override fun deleteButtonClicked(position: Int) {
         when {
             currentServicePosition == position -> {
                 showDeletePopup2(position)
             }
             currentServicePosition > position -> {
                 currentServicePosition -= 1
+                adapter.currentServicePosition = currentServicePosition
+                adapter.notifyDataSetChanged()
                 showDeletePopup1(position)
             }
             else -> {
@@ -144,7 +151,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     // n번째 아이템의 편집 버튼 클릭
-    override fun EditButtonClicked(position: Int) {
+    override fun editButtonClicked(position: Int) {
         currentEditPosition = position
         val editAlbumIntent = Intent(this, EditAlbumActivity::class.java)
 
@@ -159,7 +166,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     // n번째 아이템의 선택 버튼 클릭
-    override fun SelectButtonClicked(position: Int) {
+    override fun selectButtonClicked(position: Int) {
         if(!settingValue.homeScreen && !settingValue.lockScreen) {
             Toast.makeText(this, "설정창에서 적어도 한개의 화면은 선택해주세요", Toast.LENGTH_LONG).show()
         }else {
@@ -180,6 +187,8 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                     putValue(serviceIntent, position)
                     ContextCompat.startForegroundService(this, serviceIntent)
                     currentServicePosition = position
+                    adapter.currentServicePosition = currentServicePosition
+                    adapter.notifyDataSetChanged()
                 } else {
                     Toast.makeText(this, "이미 선택된 앨범입니다.", Toast.LENGTH_SHORT).show()
                 }
@@ -188,18 +197,14 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     //intent 에 서비스 실행에 필요한 값들 담기
-    fun putValue(serviceIntent: Intent, position: Int){
+    private fun putValue(serviceIntent: Intent, position: Int){
         for (i in 0 until albumData[position].pictureCount) {
             serviceIntent.putExtra("Picture${i}", albumData[position].albumImages[i])
         }
         serviceIntent.putExtra("Size", albumData[position].pictureCount)
 
         val metrics = DisplayMetrics()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            this.display?.getRealMetrics(metrics)
-        }else{
-            this.display?.getMetrics(metrics)
-        }
+        this.display?.getRealMetrics(metrics)
 
         serviceIntent.putExtra("PhoneHeight", metrics.heightPixels)
         serviceIntent.putExtra("PhoneWidth", metrics.widthPixels)
@@ -217,7 +222,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     // 저장소 권한 있는지 확인하고 없으면 요청
-    fun isStoragePermitted(): Boolean {
+    private fun isStoragePermitted(): Boolean {
         if(ContextCompat.checkSelfPermission(this, STORAGE_PERMISSION) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(this, arrayOf(STORAGE_PERMISSION), FLAG_STORAGE)
             return false
@@ -240,7 +245,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     //갤러리에서 사진 선택 (다중 선택 버전 고려)
-    fun openGallery() {
+    private fun openGallery() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
@@ -259,26 +264,22 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                 //갤러리에서 사진 선택 후 새로운 앨범 생성해서 albumData 리스트에 넣기
                  FLAG_OPEN_GALLERY -> {
                      val albumImages = mutableListOf<Uri>()
-                     var pictureCount = 0
+                     val pictureCount: Int
 
-                     val takeflags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                     val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                              Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
                      val clipData: ClipData? = data?.clipData
                      if (clipData != null) {
                          pictureCount = clipData.itemCount
                          for (i in 0 until pictureCount) {
-                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                 contentResolver.takePersistableUriPermission(clipData.getItemAt(i).uri, takeflags)
-                             }
+                             contentResolver.takePersistableUriPermission(clipData.getItemAt(i).uri, takeFlags)
                              albumImages.add(clipData.getItemAt(i).uri)
                          }
                      } else {
                          pictureCount = 1
-                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                             contentResolver.takePersistableUriPermission(data?.data!!, takeflags)
-                         }
-                         albumImages.add(data?.data!!)
+                         contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
+                         albumImages.add(data.data!!)
                      }
 
                      val newAlbum = Album(albumImages, "", pictureCount, albumImages[0])
@@ -292,10 +293,10 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                     currentAlbum.albumImages.clear()
 
                     currentAlbum.pictureCount = data!!.getIntExtra("Size", -1)
-                    currentAlbum.representImage = data.getParcelableExtra<Uri>("Represent")!!
+                    currentAlbum.representImage = data.getParcelableExtra("Represent")!!
                     var pictureUri: Uri
                     for (i in 0 until currentAlbum.pictureCount) {
-                        pictureUri = data.getParcelableExtra<Uri>("Picture${i}")!!
+                        pictureUri = data.getParcelableExtra("Picture${i}")!!
                         currentAlbum.albumImages.add(pictureUri)
                     }
 
@@ -312,6 +313,8 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                         stopService(serviceIntent)
                         val position = currentServicePosition
                         currentServicePosition = SERVIE_NOT_RUNNING
+                        adapter.currentServicePosition = currentServicePosition
+                        adapter.notifyDataSetChanged()
 
                         //서비스 다시 시작
                         if(!(!settingValue.homeScreen && !settingValue.lockScreen)) {
@@ -321,6 +324,8 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                                 putValue(serviceIntent, position)
                                 ContextCompat.startForegroundService(this, serviceIntent)
                                 currentServicePosition = position
+                                adapter.currentServicePosition = currentServicePosition
+                                adapter.notifyDataSetChanged()
                             }
                         }
                     }
@@ -330,7 +335,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     //서비스가 실행중이지 않은 앨범을 삭제할 때나오는 팝업 메시지
-    fun showDeletePopup1(position: Int) {
+    private fun showDeletePopup1(position: Int) {
         val alertDialog = AlertDialog.Builder(this)
             .setTitle("앨범 삭제")
             .setMessage("앨범을 정말 삭제하시겠습니까?")
@@ -338,7 +343,6 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                 albumData.removeAt(position)
                 adapter.notifyItemRemoved(position)
                 Toast.makeText(this, "앨범이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-
             }
             .setNeutralButton("취소", null)
             .create()
@@ -347,7 +351,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     //서비스가 실행중인 앨범을 삭제할 때 나오는 팝업 메시지
-    fun showDeletePopup2(position: Int) {
+    private fun showDeletePopup2(position: Int) {
         val alertDialog = AlertDialog.Builder(this)
             .setTitle("앨범 삭제")
             .setMessage("현재 배경화면으로 지정된 앨범입니다. 삭제하시면 다른 앨범을 다시 선택해야 합니다. 삭제하시겠습니까?")
@@ -366,17 +370,21 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     //문자열이 숫자인지 검사
-    fun isNumber(string: String) : Boolean {
+    private fun isNumber(string: String) : Boolean {
         var result = true
-        if(string == ""){
-            result = false
-        }else if(string[0].hashCode() == 48){
-            result = false
-        }else{
-            for(i in 0 until string.length){
-                val char : Int = string[i].hashCode()
-                if(char < 48 || char > 57) {
-                    result = false
+        when {
+            string == "" -> {
+                result = false
+            }
+            string[0].hashCode() == 48 -> {
+                result = false
+            }
+            else -> {
+                for(element in string){
+                    val char : Int = element.hashCode()
+                    if(char < 48 || char > 57) {
+                        result = false
+                    }
                 }
             }
         }
@@ -389,7 +397,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     //데이터 저장(albumData)
-    fun saveData() {
+    private fun saveData() {
         val sharedPreferences = getSharedPreferences("SharedPreferences_AlbumData", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         val gson = GsonBuilder().registerTypeHierarchyAdapter(Uri::class.java, UriTypeAdapter()).create()
@@ -400,21 +408,22 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     }
 
     //데이터 불러오기
-    fun loadData() {
+    private fun loadData() {
         val sharedPreferences = getSharedPreferences("SharedPreferences_AlbumData", Context.MODE_PRIVATE)
         currentServicePosition = sharedPreferences.getInt("Current Service Position", SERVIE_NOT_RUNNING)
+
         val gson = GsonBuilder().registerTypeHierarchyAdapter(Uri::class.java, UriTypeAdapter()).create()
         val json = sharedPreferences.getString("Album data", null)
-        if(json != null) {
+        albumData = if(json != null) {
             val type = object : TypeToken<MutableList<Album>>() {}.type
-            albumData = gson.fromJson<MutableList<Album>>(json, type)
+            gson.fromJson<MutableList<Album>>(json, type)
         }else{
-            albumData =  mutableListOf()
+            mutableListOf()
         }
     }
 
     //설정 값 불러오기
-    fun loadSetting() {
+    private fun loadSetting() {
         val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
         val homeScreen = defaultSharedPreferences.getBoolean("HomeScreen", false)

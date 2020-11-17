@@ -1,10 +1,8 @@
 package kr.co.ddophi.autochangingwallpaper
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.*
@@ -14,7 +12,7 @@ class SettingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportActionBar?.setTitle("설정 화면")
+        supportActionBar?.title = "설정 화면"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         supportFragmentManager.beginTransaction()
@@ -51,14 +49,11 @@ class SettingActivity : AppCompatActivity() {
             setOnPreferenceChange(findPreference("TimeType_Lock")!!)
             setOnPreferenceChange(findPreference("ImageResize_Lock")!!)
             setOnPreferenceChange(findPreference("ImageOrder_Lock")!!)
-
-            val preferenceName = this.preferenceManager.sharedPreferencesName
         }
 
         //설정 바꿀때마다 Summary 글도 바꾸기
-        val onPreferenceChangeListener : Preference.OnPreferenceChangeListener = object: Preference.OnPreferenceChangeListener{
-            override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
-
+        private val onPreferenceChangeListener : Preference.OnPreferenceChangeListener =
+            Preference.OnPreferenceChangeListener { preference, newValue ->
                 val stringValue = newValue.toString()
 
                 when(preference){
@@ -66,16 +61,15 @@ class SettingActivity : AppCompatActivity() {
                         preference.setSummary(stringValue)
                     }
                     is ListPreference -> {
-                        val listPreference = preference as ListPreference
+                        val listPreference : ListPreference = preference
                         val index = listPreference.findIndexOfValue(stringValue)
                         preference.setSummary(listPreference.entries[index])
                     }
                 }
-                return true
+                true
             }
-        }
 
-        fun setOnPreferenceChange(preference : Preference){
+        private fun setOnPreferenceChange(preference : Preference){
             preference.onPreferenceChangeListener = onPreferenceChangeListener
             onPreferenceChangeListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.context).getString(preference.key, ""))
         }

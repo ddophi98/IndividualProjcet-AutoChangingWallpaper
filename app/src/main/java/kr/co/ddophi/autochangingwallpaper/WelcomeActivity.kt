@@ -20,7 +20,6 @@ import kr.co.ddophi.autochangingwallpaper.MainActivity.MainActivity
 class WelcomeActivity : AppCompatActivity() {
 
     lateinit var preferences: SharedPreferences
-    lateinit var preferencesEditor : SharedPreferences.Editor
     lateinit var layouts : ArrayList<Int>
     lateinit var dots : ArrayList<TextView>
 
@@ -28,7 +27,6 @@ class WelcomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         preferences = getSharedPreferences("SharedPreferences_CheckFirstLaunch", Context.MODE_PRIVATE)
-        preferencesEditor = preferences.edit()
 
         val firstLaunch = preferences.getBoolean("First Launch", true)
         if(!firstLaunch){
@@ -37,13 +35,11 @@ class WelcomeActivity : AppCompatActivity() {
         }
 
         if (Build.VERSION.SDK_INT >= 21) {
-            Log.d("로그", "화면 가리기")
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Log.d("로그", "화면 가리기2")
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             window.statusBarColor = Color.TRANSPARENT
         }
@@ -109,9 +105,10 @@ class WelcomeActivity : AppCompatActivity() {
         }
     }
 
-    fun launchMainActivity() {
+    private fun launchMainActivity() {
+        val preferencesEditor = preferences.edit()
         preferencesEditor.putBoolean("First Launch", false)
-        preferencesEditor.commit()
+        preferencesEditor.apply()
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }
@@ -131,7 +128,7 @@ class WelcomeActivity : AppCompatActivity() {
         }
 
         override fun getCount(): Int {
-            return layouts.size;
+            return layouts.size
         }
 
         override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {

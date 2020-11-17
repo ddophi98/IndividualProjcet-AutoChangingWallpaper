@@ -4,10 +4,8 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
@@ -18,9 +16,9 @@ import kr.co.ddophi.autochangingwallpaper.R
 class EditAlbumActivity : AppCompatActivity() {
 
     private val FLAG_OPEN_GALLERY = 101
-    val album = mutableListOf<Uri>()
-    var albumTitle : String? = null
-    var representImage : Uri? = null
+    private val album = mutableListOf<Uri>()
+    private var albumTitle : String? = null
+    private var representImage : Uri? = null
     private lateinit var adapter: EditAlbumAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +43,7 @@ class EditAlbumActivity : AppCompatActivity() {
     }
 
     // 어답터 연결
-    fun connectAdapter () {
+    private fun connectAdapter () {
         adapter = EditAlbumAdapter(this, albumTitle, album, representImage)
         pictureRecyclerView.adapter = adapter
         pictureRecyclerView.layoutManager = GridLayoutManager(this, 3)
@@ -75,24 +73,24 @@ class EditAlbumActivity : AppCompatActivity() {
 
 
     //main 함수에서 넘어온 사진 데이터 받음
-    fun loadData() {
+    private fun loadData() {
         albumTitle = intent.getStringExtra("Title")
         representImage = intent.getParcelableExtra("Represent")
         val size = intent.getIntExtra("Size", 0)
         var pictureUri : Uri
         for(i in 0 until size){
-            pictureUri = intent.getParcelableExtra<Uri>("Picture${i}")!!
+            pictureUri = intent.getParcelableExtra("Picture${i}")!!
             album.add(pictureUri)
         }
     }
 
     //갤러리에서 사진 선택 (다중 선택 버전 고려)
-    fun openGallery() {
+    private fun openGallery() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        intent.setType("image/*")
+        intent.type = "image/*"
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         startActivityForResult(intent, FLAG_OPEN_GALLERY)
     }
@@ -118,11 +116,9 @@ class EditAlbumActivity : AppCompatActivity() {
                         }
                         if(!isContain) {
                             for (i in 0 until clipData.itemCount) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                    contentResolver.takePersistableUriPermission(
-                                        clipData.getItemAt(i).uri, takeflags
-                                    )
-                                }
+                                contentResolver.takePersistableUriPermission(
+                                    clipData.getItemAt(i).uri, takeflags
+                                )
                                 album.add(clipData.getItemAt(i).uri)
                             }
                         }
@@ -131,9 +127,7 @@ class EditAlbumActivity : AppCompatActivity() {
                         if(album.contains(imageUri)){
                             isContain = true
                         }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                            contentResolver.takePersistableUriPermission(data?.data!!, takeflags)
-                        }
+                        contentResolver.takePersistableUriPermission(data?.data!!, takeflags)
                         if (imageUri != null && !isContain) {
                             album.add(imageUri)
                         }

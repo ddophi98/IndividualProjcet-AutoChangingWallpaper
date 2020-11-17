@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Auto Changing Wallpaper</string>
+    <string name="app_name">자동 배경화면 바꾸기</string>
     <string name="title_activity_settings">Settings</string>
 
     <!-- Preference Titles -->
