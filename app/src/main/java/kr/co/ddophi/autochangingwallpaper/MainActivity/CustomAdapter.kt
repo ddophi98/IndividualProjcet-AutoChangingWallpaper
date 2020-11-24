@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.item_recycler.view.*
 import kr.co.ddophi.autochangingwallpaper.Album
 import kr.co.ddophi.autochangingwallpaper.R
@@ -71,7 +72,7 @@ class CustomAdapter(recyclerViewInterface: MyRecyclerViewInterface, val activity
         fun setAlbum(album : Album) {
             itemView.albumTitle.setText(album.albumTitle)
             itemView.pictureCount.text = "${album.pictureCount} photos"
-            itemView.albumImage.setImageURI(album.representImage)
+            Glide.with(activity).load(album.representImage).placeholder(R.drawable.progress_animation).into(itemView.albumImage)
             if(currentServicePosition == adapterPosition){
                 itemView.albumchecked.visibility = View.VISIBLE
             }else{

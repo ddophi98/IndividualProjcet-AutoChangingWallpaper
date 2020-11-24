@@ -168,16 +168,16 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
     // n번째 아이템의 선택 버튼 클릭
     override fun selectButtonClicked(position: Int) {
         if(!settingValue.homeScreen && !settingValue.lockScreen) {
-            Toast.makeText(this, "설정창에서 적어도 한개의 화면은 선택해주세요", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "설정창에서 적어도 한개의 화면은 선택해주세요", Toast.LENGTH_SHORT).show()
         }else {
             if((!isNumber(settingValue.homeTimeValue) && settingValue.homeScreen) || (!isNumber(settingValue.lockTimeValue) && settingValue.lockScreen)) {
-                Toast.makeText(this, "설정창에서 시간을 제대로 입력해주세요", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "설정창에서 시간을 제대로 입력해주세요", Toast.LENGTH_SHORT).show()
             }else {
                 if (currentServicePosition != position) {
                     Toast.makeText(
                         this,
                         "${albumData[position].albumTitle} 앨범이 선택되었습니다. 배경화면이 자동으로 바뀝니다.",
-                        Toast.LENGTH_LONG
+                        Toast.LENGTH_SHORT
                     ).show()
 
                     val serviceIntent = Intent(this, AutoChangingService::class.java)
@@ -235,7 +235,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
         when(requestCode) {
             FLAG_STORAGE -> {
                 if(grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "저장소 권한을 승인해야지만 앱을 사용할 수 있습니다.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "저장소 권한을 승인해야지만 앱을 사용할 수 있습니다.", Toast.LENGTH_SHORT).show()
                     return
                 }else{
                     openGallery()
@@ -319,7 +319,7 @@ class MainActivity : AppCompatActivity(), MyRecyclerViewInterface {
                         //서비스 다시 시작
                         if(!(!settingValue.homeScreen && !settingValue.lockScreen)) {
                             if((!isNumber(settingValue.homeTimeValue) && settingValue.homeScreen) || (!isNumber(settingValue.lockTimeValue) && settingValue.lockScreen)){
-                                Toast.makeText(this, "설정창에서 시간을 제대로 입력해주세요", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this, "설정창에서 시간을 제대로 입력해주세요", Toast.LENGTH_SHORT).show()
                             }else {
                                 putValue(serviceIntent, position)
                                 ContextCompat.startForegroundService(this, serviceIntent)

@@ -22,10 +22,8 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         //전원 꺼졌다가 다시 켜졌을 때 서비스 다시 실행
         if(intent?.action.equals(Intent.ACTION_BOOT_COMPLETED)) {
-            Log.d("로그", "리부팅 후 서비스 재실행")
-
+            loadData(context!!)
             if(currentServicePosition != SERVIE_NOT_RUNNING){
-                loadData(context!!)
                 loadSetting(context)
                 val serviceIntent = Intent(context, AutoChangingService::class.java)
                 putValue(context, serviceIntent, currentServicePosition)

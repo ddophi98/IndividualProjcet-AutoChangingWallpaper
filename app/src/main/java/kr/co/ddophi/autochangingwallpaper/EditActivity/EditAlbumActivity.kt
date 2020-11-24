@@ -134,7 +134,7 @@ class EditAlbumActivity : AppCompatActivity() {
                     }
                     adapter.notifyDataSetChanged()
                     if(isContain){
-                        Toast.makeText(this, "이미 포함된 사진이 있습니다. 다시 골라주세요", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "이미 포함된 사진이 있습니다. 다시 골라주세요", Toast.LENGTH_SHORT).show()
                     }
                 }
             }

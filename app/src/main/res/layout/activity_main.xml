@@ -15,6 +15,7 @@
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
         android:background="@color/colorMainBackground1"
+        android:nestedScrollingEnabled="false"
         app:layout_constraintBottom_toTopOf="@+id/btnAddAlbum"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -29,11 +30,11 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="60dp"
         android:layout_marginBottom="8dp"
-        android:background="@color/colorInvisible"
+        android:background="@drawable/addbutton_outside"
         app:layout_constraintBottom_toTopOf="@+id/advertiseSpace"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/albumRecyclerView"
-        app:srcCompat="@drawable/ic_add_circle_purple_60dp" />
+        app:srcCompat="@drawable/ic_add_circle_purple_55dp" />
 
     <Button
         android:id="@+id/btnStop"

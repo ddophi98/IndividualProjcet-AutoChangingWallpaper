@@ -8,6 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.picture_recycler.view.*
 import kr.co.ddophi.autochangingwallpaper.R
 
@@ -30,23 +31,8 @@ class EditAlbumAdapter(val activity: AppCompatActivity, val title: String?, val 
     override fun onBindViewHolder(holder: PictureHolder, position: Int) {
         val pictureUri = album[position]
         //각각의 사진들 보이도록 연결해주기
+
         holder.setPicture(pictureUri)
-
-        //선택된 사진인지 수시로 확인
-        if(selectedList.contains(pictureUri)){
-            holder.itemView.iconChecked.visibility = View.VISIBLE
-            holder.itemView.pictureInAlbum.alpha = 0.3f
-        }else{
-            holder.itemView.iconChecked.visibility = View.INVISIBLE
-            holder.itemView.pictureInAlbum.alpha = 1.0f
-        }
-
-        //대표 사진인지 수시로 확인
-        if(pictureUri != representImage){
-            holder.itemView.iconRepresent.visibility = View.INVISIBLE
-        }else{
-            holder.itemView.iconRepresent.visibility = View.VISIBLE
-        }
 
         //사진 길게 눌렀을 때 동작
         holder.itemView.setOnLongClickListener{
@@ -190,7 +176,22 @@ class EditAlbumAdapter(val activity: AppCompatActivity, val title: String?, val 
 
     inner class PictureHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun setPicture(pictureUri : Uri) {
-            itemView.pictureInAlbum.setImageURI(pictureUri)
+            Glide.with(activity).load(pictureUri).placeholder(R.drawable.progress_animation).into(itemView.pictureInAlbum)
+            //선택된 사진인지 수시로 확인
+            if(selectedList.contains(pictureUri)){
+                itemView.iconChecked.visibility = View.VISIBLE
+                itemView.pictureInAlbum.alpha = 0.3f
+            }else{
+                itemView.iconChecked.visibility = View.INVISIBLE
+                itemView.pictureInAlbum.alpha = 1.0f
+            }
+
+            //대표 사진인지 수시로 확인
+            if(pictureUri != representImage){
+                itemView.iconRepresent.visibility = View.INVISIBLE
+            }else{
+                itemView.iconRepresent.visibility = View.VISIBLE
+            }
         }
     }
 }

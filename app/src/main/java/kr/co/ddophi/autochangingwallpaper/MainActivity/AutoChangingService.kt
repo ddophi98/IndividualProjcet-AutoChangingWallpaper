@@ -76,13 +76,7 @@ class AutoChangingService : Service() {
     private fun runBackground1(intent: Intent) {
         Log.d("로그", "1서비스")
 
-        //세팅값에 따라 이미지를 fill 로 할지, fit 으로 할지 결정
-        val albumImages : MutableList<Bitmap> = if(settingValue.homeImageResize == "fill"){
-            loadDataFill(intent)
-        }else{
-            loadDataFit(intent)
-        }
-
+        val albumImages : MutableList<Uri> = loadData(intent)
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
 
         //세팅값에 따라 바뀌는 시간 주기를 얼마나 할지 결정
@@ -102,7 +96,7 @@ class AutoChangingService : Service() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            changingWallpaper(albumImages, wallpaperManager, delayTime, WallpaperManager.FLAG_SYSTEM)
+            changingWallpaper(intent, albumImages, wallpaperManager, delayTime, WallpaperManager.FLAG_SYSTEM)
         }
     }
 
@@ -110,13 +104,8 @@ class AutoChangingService : Service() {
     private fun runBackground2(intent: Intent) {
         Log.d("로그", "2서비스")
 
-        //세팅값에 따라 이미지를 fill 로 할지, fit 으로 할지 결정
-        val albumImages : MutableList<Bitmap> = if(settingValue.lockImageResize == "fill"){
-            loadDataFill(intent)
-        }else{
-            loadDataFit(intent)
-        }
 
+        val albumImages : MutableList<Uri> = loadData(intent)
         val wallpaperManager : WallpaperManager = WallpaperManager.getInstance(this)
 
         //세팅값에 따라 바뀌는 시간 주기를 얼마나 할지 결정
@@ -136,40 +125,72 @@ class AutoChangingService : Service() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            changingWallpaper(albumImages, wallpaperManager, delayTime, WallpaperManager.FLAG_LOCK)
+            changingWallpaper(intent, albumImages, wallpaperManager, delayTime, WallpaperManager.FLAG_LOCK)
         }
     }
 
     //세팅값에 따라 사진을 순서대로 바꿀지, 랜덤으로 바꿀지 결정
-    private fun changingWallpaper (albumImages : MutableList<Bitmap>, wallpaperManager: WallpaperManager, delayTime : Long, flag : Int) {
-        var idx = 0
-        if(settingValue.lockImageOrder == "inOrder") {
-            GlobalScope.launch(Dispatchers.Default) {
-                while (isRunning) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        wallpaperManager.setBitmap(albumImages[idx], null, true, flag)
-                    }
-                    delay(delayTime)
-                    idx += 1
-                    if (idx == albumImages.size) {
-                        idx = 0
-                    }
+    private fun changingWallpaper (intent: Intent, albumImagesUri : MutableList<Uri>, wallpaperManager: WallpaperManager, delayTime : Long, flag : Int) {
 
+        val albumImagesBitmap = mutableListOf<Bitmap>()
+        val phoneHeight = intent.getIntExtra("PhoneHeight", 0)
+        val phoneWidth = intent.getIntExtra("PhoneWidth", 0)
+        var idx = 0
+        val order: String
+        val resize: String
+        if (flag == WallpaperManager.FLAG_SYSTEM) {
+            order = settingValue.homeImageOrder
+            resize = settingValue.homeImageResize
+        } else {
+            order = settingValue.lockImageOrder
+            resize = settingValue.lockImageResize
+        }
+
+        GlobalScope.launch(Dispatchers.Default) {
+            //첫 이미지만 미리 비트맵 변환
+            var firstImage = uriToBitmap(albumImagesUri[0])
+            if (resize == "fit") {
+                firstImage = resizeBitmap(firstImage, phoneWidth, phoneHeight)
+            }
+            albumImagesBitmap.add(firstImage)
+            var bitmapNum = 1
+
+            //다음 이미지부터 코루틴에서 따로 변환
+            launch{
+                for (uri in albumImagesUri) {
+                    if(!isRunning)
+                        break
+                    if(uri == albumImagesUri[0])
+                        continue
+                    var newImage = uriToBitmap(uri)
+                    if (resize == "fit") {
+                        newImage = resizeBitmap(newImage, phoneWidth, phoneHeight)
+                    }
+                    albumImagesBitmap.add(newImage)
+                    bitmapNum++
                 }
             }
-        }else{
-            GlobalScope.launch(Dispatchers.Default) {
-                var preIdx: Int
+
+            //코루틴에서 배경화면 계속 바꿔주기
+            launch {
                 val random = Random()
+                var preIdx: Int
                 while (isRunning) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        wallpaperManager.setBitmap(albumImages[idx], null, true, flag)
+                        wallpaperManager.setBitmap(albumImagesBitmap[idx], null, true, flag)
                     }
                     delay(delayTime)
-                    preIdx = idx
-                    idx = random.nextInt(albumImages.size)
-                    while(idx == preIdx){
-                        idx = random.nextInt(albumImages.size)
+                    if (order == "inOrder") {
+                        idx += 1
+                        if (idx == albumImagesUri.size) {
+                            idx = 0
+                        }
+                    } else {
+                        preIdx = idx
+                        idx = random.nextInt(bitmapNum)
+                        while (idx == preIdx) {
+                            idx = random.nextInt(bitmapNum)
+                        }
                     }
                 }
             }
@@ -194,34 +215,18 @@ class AutoChangingService : Service() {
         Log.d("로그", "받아온 서비스의 세팅값: $settingValue")
     }
 
-    //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기(fill)
-    private fun loadDataFill(intent: Intent) : MutableList<Bitmap> {
-
-        val albumImages = mutableListOf<Bitmap>()
+    //따로따로 전달된 사진들을 하나의 리스트에 담기
+    private fun loadData(intent: Intent) : MutableList<Uri> {
+        val albumImages = mutableListOf<Uri>()
         val size = intent.getIntExtra("Size", 0)
         var uri : Uri
         for(i in 0 until size){
             uri = intent.getParcelableExtra("Picture${i}")!!
-            albumImages.add(uriToBitmap(uri))
+            albumImages.add(uri)
         }
         return albumImages
     }
 
-    //따로따로 전달된 사진들을 하나의  Bitmap 리스트에 담기(fit)
-    private fun loadDataFit(intent: Intent) : MutableList<Bitmap> {
-
-        val phoneHeight = intent.getIntExtra("PhoneHeight", 0)
-        val phoneWidth = intent.getIntExtra("PhoneWidth", 0)
-
-        val albumImages = mutableListOf<Bitmap>()
-        val size = intent.getIntExtra("Size", 0)
-        var uri : Uri
-        for(i in 0 until size){
-            uri = intent.getParcelableExtra("Picture${i}")!!
-            albumImages.add(resizeBitmap(uriToBitmap(uri), phoneWidth, phoneHeight))
-        }
-        return albumImages
-    }
 
     //Uri 를 Bitmap 으로 변경
     private fun uriToBitmap(uri: Uri) : Bitmap {
