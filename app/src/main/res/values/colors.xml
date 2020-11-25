@@ -8,7 +8,9 @@
     <color name="colorMainBackground1">#C7E6EA</color>
     <color name="colorMainBackground2">#AFC7F6</color>
     <color name="colorInvisible">#00FFFFFF</color>
-    <color name="colorWelcomeBackground">#2F7F13EA</color>
+    <color name="colorWelcomeBackground">#F8F7CF</color>
+    <color name="colorWelcomeBottomBackground">#F8FFA2</color>
+    <color name="colorWelcomeButton">#2CBABA</color>
 
     <!-- dots inactive colors -->
     <color name="dot_dark_screen1">#d1395c</color>

@@ -6,12 +6,12 @@
         android:title="적용 화면"
         android:layout="@layout/preference_background1">
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="HomeScreen"
             android:summary="홈화면의 배경을 설정합니다."
             android:title="홈화면" />
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="LockScreen"
             android:summary="잠금화면의 배경을 설정합니다."
             android:title="잠금화면" />
