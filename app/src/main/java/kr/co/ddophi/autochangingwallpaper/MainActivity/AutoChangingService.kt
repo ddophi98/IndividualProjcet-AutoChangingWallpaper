@@ -251,14 +251,24 @@ class AutoChangingService : Service() {
 
         val canvas = Canvas(background)
 
-        val scale : Float = width/originalWidth
-
-        val xTranslation = 0.0f
-        val yTranslation = (height - originalHeight * scale) / 2.0f
-
+        val scale1 : Float = width/originalWidth
+        val scale2 : Float = height/originalHeight
+        val xTranslation : Float
+        val yTranslation : Float
         val transformation = Matrix()
-        transformation.postTranslate(xTranslation, yTranslation)
-        transformation.preScale(scale, scale)
+
+        if(scale1 < scale2){
+            xTranslation = 0.0f
+            yTranslation = (height - originalHeight * scale1) / 2.0f
+            transformation.postTranslate(xTranslation, yTranslation)
+            transformation.preScale(scale1, scale1)
+        }else{
+            xTranslation = (width - originalWidth * scale2) / 2.0f
+            yTranslation = 0.0f
+            transformation.postTranslate(xTranslation, yTranslation)
+            transformation.preScale(scale2, scale2)
+        }
+
 
         val paint = Paint()
         paint.isFilterBitmap = true
