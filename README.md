@@ -1,5 +1,6 @@
 # AutoChangingWallpaper
 일정 시간마다 원하는 사진으로 핸드폰 배경화면을 바꿀 수 있는 앱입니다.
+Google Play: https://play.google.com/store/apps/details?id=kr.co.ddophi.autochangingwallpaper
 
 <div style="display:flex">
   <img height="300" src="https://user-images.githubusercontent.com/72330884/156920919-ee8a882a-7674-4780-864e-59e7bf6f84ca.png">
